@@ -20,3 +20,17 @@ sudo apt-get update && sudo apt-get install -y libopencv-dev python-opencv build
 
 ## Building
 
+```bash
+mkdir build && cd build
+cmake ..
+make -j
+```
+
+## Running
+
+Build outputs are placed in the `bin` directory. All of the executables are configured with YAML files in the `config` directory. You can edit these to change the input parameters to each of the assignments. For example, with Problem Set 0, all you need to do (after building) is:
+
+```bash
+cd bin
+./ps0
+```
