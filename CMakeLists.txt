@@ -13,6 +13,17 @@ link_libraries(${OpenCV_LIBS} )
 
 set (EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/bin/")
 
+#######################################
+# Externally-sourced libraries
+#######################################
+add_subdirectory(external)
+
+include_directories(external/yaml-cpp-yaml-cpp-0.6.1/include)
+
+#######################################
+# Look for CUDA
+#######################################
+
 if(CUDA_FOUND)
   set(CUDA_NVCC_FLAGS "
   -ccbin g++;

@@ -1,3 +1,5 @@
+#include <yaml-cpp/yaml.h>
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -5,6 +7,8 @@
 #include <array>
 #include <iostream>
 #include <sstream>
+
+static constexpr char CONFIG_FILE_PATH[] = "../config/ps0.yaml";
 
 namespace Color {
 enum Channels : int { BLUE = 0, GREEN = 1, RED = 2 };
@@ -45,8 +49,6 @@ void doArithmeticOperations(const cv::Mat& inputImage,
                             const double stdDev,
                             cv::Mat& outputImage) {
     outputImage = inputImage.clone();
-    // subtract(outputImage, mean, outputImage);
-    // divide(outputImage, stdDev, outputImage);
     outputImage -= mean;
     outputImage /= stdDev;
     outputImage *= 10;
@@ -76,46 +78,49 @@ void addGaussianNoise(const cv::Mat& image,
     output.convertTo(output, image.type());
 }
 
-std::string getUsage() {
-    std::stringstream ss;
-    ss << "Intro to Computer Vision Problem Set 0" << std::endl;
-    ss << "    ./ps0 <path to first image> <path to second image>" << std::endl;
-    ss << "Example:" << std::endl;
-    ss << "    ./ps0 ../Resources/USC_Misc/4.1.03.png ../Resources/USC_Misc/4.1.07.png"
-       << std::endl;
-    return ss.str();
-}
-
 int main(int argc, char** argv) {
-    if (argc != 3) {
-        std::cerr << "Not enough input arguments!" << std::endl;
-        std::cerr << getUsage() << std::endl;
+    //********** Load configuration **********
+    std::string image1Path, image2Path;
+    YAML::Node config = YAML::LoadFile(CONFIG_FILE_PATH);
+    if (config.IsNull()) {
+        std::cerr << "Could not load input file (was looking for " << CONFIG_FILE_PATH << ")"
+                  << std::endl;
         return -1;
     }
+    YAML::Node imagesNode = config["images"];
+    if (imagesNode.IsNull()) {
+        std::cerr << "Malformed config file - could not find \"images\" node" << std::endl;
+        return -1;
+    }
+    image1Path = imagesNode["image1"].as<std::string>();
+    image2Path = imagesNode["image2"].as<std::string>();
+    // Done loading configuration from YAML file
 
-    cv::Mat image = cv::imread(argv[1], CV_LOAD_IMAGE_COLOR);
-    cv::Mat image2 = cv::imread(argv[2], CV_LOAD_IMAGE_COLOR);
+    //********** Load images **********
+    cv::Mat image1 = cv::imread(image1Path, CV_LOAD_IMAGE_COLOR);
+    cv::Mat image2 = cv::imread(image2Path, CV_LOAD_IMAGE_COLOR);
 
-    if (!image.data) {
+    if (!image1.data) {
         std::cerr << "Could not open or find image \"" << argv[1] << "\"" << std::endl;
     }
     if (!image2.data) {
         std::cerr << "Could not open or find image \"" << argv[2] << "\"" << std::endl;
     }
 
+    //********** Problem Set 0 solution **********
     cv::Mat swappedImg;
     // 2a. Swap red and blue pixels
-    swapRedBlue(image, swappedImg);
+    swapRedBlue(image1, swappedImg);
     cv::imwrite("ps0-2-a-1.png", swappedImg);
 
     // 2b. Extract green pixels
     cv::Mat green;
-    cv::extractChannel(image, green, Color::GREEN);
+    cv::extractChannel(image1, green, Color::GREEN);
     cv::imwrite("ps0-2-b-1.png", green);
 
     // 2c. Extract red pixels
     cv::Mat red;
-    extractChannel(image, red, Color::RED);
+    extractChannel(image1, red, Color::RED);
     cv::imwrite("ps0-2-c-1.png", red);
 
     // 3a. Take the center square region of 100x100 pixels of monochrome version of image 1 and
@@ -161,7 +166,7 @@ int main(int argc, char** argv) {
 
     // 5b. Now, instead add that amount of noise to the blue channel.
     cv::Mat blue, noisyBlue;
-    extractChannel(image, blue, Color::BLUE);
+    extractChannel(image1, blue, Color::BLUE);
     addGaussianNoise(blue, 0, NOISE_SIGMA, noisyBlue);
     cv::imwrite("ps0-5-b-1.png", noisyBlue);
 
