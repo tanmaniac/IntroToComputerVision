@@ -1,7 +1,10 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
+#include <array>
 #include <iostream>
+#include <sstream>
 
 namespace Color {
 enum Channels : int { BLUE = 0, GREEN = 1, RED = 2 };
@@ -26,7 +29,7 @@ void pixelReplacement(const cv::Mat& img1, const cv::Mat& img2, cv::Mat& outputI
 
     cv::Mat center(img1, centerPixels);
 
-    outputImage = cv::Mat(img2);
+    outputImage = img2.clone();
 
     center.copyTo(outputImage(cv::Rect((img2.cols / 2) - (NUM_CENTER_PIXELS / 2),
                                        (img2.rows / 2) - (NUM_CENTER_PIXELS / 2),
@@ -41,7 +44,7 @@ void doArithmeticOperations(const cv::Mat& inputImage,
                             const double mean,
                             const double stdDev,
                             cv::Mat& outputImage) {
-    outputImage = cv::Mat(inputImage);
+    outputImage = inputImage.clone();
     // subtract(outputImage, mean, outputImage);
     // divide(outputImage, stdDev, outputImage);
     outputImage -= mean;
@@ -50,8 +53,43 @@ void doArithmeticOperations(const cv::Mat& inputImage,
     outputImage += mean;
 }
 
+void translateImg(const cv::Mat& image, const int xOffset, const int yOffset, cv::Mat& output) {
+    output = image.clone();
+    cv::Mat translationMat = (cv::Mat_<double>(2, 3) << 1, 0, xOffset, 0, 1, yOffset);
+    cv::warpAffine(image, output, translationMat, output.size());
+}
+
+void addGaussianNoise(const cv::Mat& image,
+                      const double mean,
+                      const double sigma,
+                      cv::Mat& output) {
+    if (image.channels() != 1) {
+        std::cerr << "Input to addGaussianNoise() must have 1 channel" << std::endl;
+        return;
+    }
+    output = image.clone();
+    cv::Mat noise = cv::Mat(image.size(), CV_8SC1);
+    // Generate noise
+    cv::randn(noise, cv::Scalar::all(mean), cv::Scalar::all(sigma));
+    image.convertTo(output, CV_8SC1);
+    cv::addWeighted(output, 1.0, noise, 1.0, 0.0, output);
+    output.convertTo(output, image.type());
+}
+
+std::string getUsage() {
+    std::stringstream ss;
+    ss << "Intro to Computer Vision Problem Set 0" << std::endl;
+    ss << "    ./ps0 <path to first image> <path to second image>" << std::endl;
+    ss << "Example:" << std::endl;
+    ss << "    ./ps0 ../Resources/USC_Misc/4.1.03.png ../Resources/USC_Misc/4.1.07.png"
+       << std::endl;
+    return ss.str();
+}
+
 int main(int argc, char** argv) {
     if (argc != 3) {
+        std::cerr << "Not enough input arguments!" << std::endl;
+        std::cerr << getUsage() << std::endl;
         return -1;
     }
 
@@ -102,6 +140,30 @@ int main(int argc, char** argv) {
     cv::Mat arithmeticOps;
     doArithmeticOperations(green, mean[0], stdDev[0], arithmeticOps);
     cv::imwrite("ps0-4-b-1.png", arithmeticOps);
+
+    // 4c. Shift img1_green to the left by 2 pixels
+    cv::Mat translatedGreen;
+    translateImg(green, -2, 0, translatedGreen);
+    cv::imwrite("ps0-4-c-1.png", translatedGreen);
+
+    // 4d. Subtract the shifted version of img1_green from the original, and save the difference
+    // image
+    cv::Mat translationDiff = green.clone();
+    translationDiff -= translatedGreen;
+    cv::imwrite("ps0-4-d-1.png", translationDiff);
+
+    // 5a. Take the original colored image (image 1) and start adding Gaussian noise to the pixels
+    // in the green channel. Increase sigma until the noise is somewhat visible
+    cv::Mat noisyGreen;
+    static constexpr int NOISE_SIGMA = 5;
+    addGaussianNoise(green, 0, NOISE_SIGMA, noisyGreen);
+    cv::imwrite("ps0-5-a-1.png", noisyGreen);
+
+    // 5b. Now, instead add that amount of noise to the blue channel.
+    cv::Mat blue, noisyBlue;
+    extractChannel(image, blue, Color::BLUE);
+    addGaussianNoise(blue, 0, NOISE_SIGMA, noisyBlue);
+    cv::imwrite("ps0-5-b-1.png", noisyBlue);
 
     return 0;
 }
