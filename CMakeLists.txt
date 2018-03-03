@@ -19,6 +19,7 @@ set (EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/bin/")
 add_subdirectory(external)
 
 include_directories(external/yaml-cpp-yaml-cpp-0.6.1/include)
+include_directories(common)
 
 #######################################
 # Look for CUDA
@@ -52,6 +53,8 @@ if(CUDA_FOUND)
   set(CUDA_NVCC_FLAGS_DEBUG ${CUDA_NVCC_FLAGS_DEBUG} "-G")
 
   add_subdirectory (ProblemSets)
+
+  add_subdirectory (explore)
 
 else(CUDA_FOUND)
   message("CUDA is not installed on this system.")
