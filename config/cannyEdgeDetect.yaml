@@ -1,8 +1,8 @@
 ---
 # Load a really huge image to tax the edge detection CUDA kernels
 images:
-  source: ../../Resources/Wikimedia/HashtBehest.jpg
+  source: ../../Resources/USC_Misc/4.2.05.png
 
-gaussianRadius: 7
+gaussianRadius: 17
 sigma: 5
 ...
