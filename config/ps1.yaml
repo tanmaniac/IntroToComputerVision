@@ -1,0 +1,19 @@
+---
+# Problem set 1 configuration
+images:
+  input0: ../Resources/ProblemSet1/ps1-input0.png
+  #input0: ../Resources/USC_Misc/4.1.05.png
+  input0_noise: ../Resources/ProblemSet1/ps1-input0-noise.png
+  input1: ../Resources/ProblemSet1/ps1-input1.png
+  input2: ../Resources/ProblemSet1/ps1-input2.png
+  input3: ../Resources/ProblemSet1/ps1-input3.png
+output_dir: ./ps1_output
+
+# Edge detector options
+edge_detector:
+  gaussian_size: 7
+  gaussian_sigma: 0.001
+  lower_threshold: 1
+  upper_threshold: 3
+  sobel_aperture_size: 3
+...
