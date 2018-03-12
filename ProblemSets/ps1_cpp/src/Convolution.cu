@@ -1,4 +1,5 @@
 // Separable convolution kernel - should be faster than the OpenCV version
+#include <common/CudaCommon.cuh>
 #include "Convolution.h"
 
 #include <cuda.h>
@@ -7,28 +8,6 @@
 
 #include <cassert>
 #include <thread>
-
-// For checking CUDA errors
-#define checkCudaErrors(err) __checkCudaErrors(err, __FILE__, __LINE__)
-
-inline void __checkCudaErrors(cudaError_t err, const char* file, const int line) {
-    if (cudaSuccess != err) {
-        fprintf(stderr,
-                "CUDA Driver API error: %s at file <%s>, line %i.\n",
-                cudaGetErrorString(err),
-                file,
-                line);
-        exit(-1);
-    }
-}
-
-__device__ inline uint2 getPosition() {
-    return make_uint2(blockIdx.x * blockDim.x + threadIdx.x, blockIdx.y * blockDim.y + threadIdx.y);
-}
-
-__device__ inline unsigned int convert2dTo1d(const uint2 loc, const size_t numCols) {
-    return loc.y * numCols + loc.x;
-}
 
 // Row convolution. This step should be run before column convolution
 // input - input image
@@ -174,7 +153,7 @@ void rowConvolution(const cv::gpu::GpuMat& d_input,
     const size_t kernelSize = d_kernel.cols;
     assert(kernelSize % 2 == 1);
 
-    d_dest = cv::gpu::GpuMat(rows, cols, d_input.type());
+    d_dest = cv::gpu::createContinuous(rows, cols, d_input.type());
 
     // Run convolution kernel
     dim3 blocks(max(1, (unsigned int)ceil(float(cols) / float(THREADS_PER_BLOCK))), rows);
@@ -207,7 +186,7 @@ void columnConvolution(const cv::gpu::GpuMat& d_input,
     const size_t kernelSize = d_kernel.cols;
     assert(kernelSize % 2 == 1);
 
-    d_dest = cv::gpu::GpuMat(rows, cols, d_input.type());
+    d_dest = cv::gpu::createContinuous(rows, cols, d_input.type());
 
     // Run convolution kernel
     dim3 blocks(cols, max(1, (unsigned int)ceil(float(rows) / float(THREADS_PER_BLOCK))));
@@ -296,8 +275,8 @@ void separableConvolution(const cv::Mat& input,
 
     // Copy to device
     cv::gpu::GpuMat d_input, d_rowKernel, d_colKernel;
-    cv::gpu::GpuMat d_buffer(rows, cols, input.type());
-    cv::gpu::GpuMat d_dest(rows, cols, input.type());
+    cv::gpu::GpuMat d_buffer = cv::gpu::createContinuous(rows, cols, input.type());
+    cv::gpu::GpuMat d_dest = cv::gpu::createContinuous(rows, cols, input.type());
 
     // Separate thread since upload() is a blocking call
     std::thread copyInputThread([&d_input, &input]() { d_input.upload(input); });

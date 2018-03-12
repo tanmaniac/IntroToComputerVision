@@ -15,4 +15,10 @@ int main() {
     cv::Mat detectedEdges;
     mySol.generateEdge(mySol._input0, detectedEdges);
     cv::imwrite("ps1_output/ps1-1-a-1.png", detectedEdges);
+
+    // Find lines in image
+    cv::Mat accumulator;
+    mySol.houghCudaAccumulate(detectedEdges, accumulator);
+
+    cv::imwrite("ps1_output/ps1-2-a-1.png", accumulator);
 }

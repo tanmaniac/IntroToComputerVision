@@ -19,6 +19,7 @@ set (EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/bin/")
 add_subdirectory(external)
 
 include_directories(external/yaml-cpp-yaml-cpp-0.6.1/include)
+include_directories(common/include)
 
 #######################################
 # Look for CUDA

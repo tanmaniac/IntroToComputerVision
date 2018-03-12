@@ -1,5 +1,6 @@
 #include "Solution.h"
 #include "Convolution.h"
+#include "Hough.h"
 
 #include <yaml-cpp/yaml.h>
 
@@ -9,7 +10,10 @@
 
 #include <errno.h>
 #include <sys/stat.h>
+#include <cmath>
 #include <iostream>
+
+static constexpr float PI = 3.14159265;
 
 Solution::Solution(const std::string& configFilePath) {
     // Load images from config file
@@ -56,12 +60,12 @@ Solution::Solution(const std::string& configFilePath) {
     }
 
     // Load edge detector parameters
-    if (YAML::Node edgeDetectNode = config["edge_detector"]) {
-        _gaussianSize = edgeDetectNode["gaussian_size"].as<size_t>();
-        _gaussianSigma = edgeDetectNode["gaussian_sigma"].as<float>();
-        _lowerThreshold = edgeDetectNode["lower_threshold"].as<double>();
-        _upperThreshold = edgeDetectNode["upper_threshold"].as<double>();
-        _sobelApertureSize = edgeDetectNode["sobel_aperture_size"].as<double>();
+    if (YAML::Node edgeDetectNode = config["edge_detector_p2"]) {
+        _p2EdgeConfig = std::make_shared<EdgeDetectConfig>(edgeDetectNode);
+    }
+
+    if (YAML::Node houghConfigNode = config["hough_transform_p2"]) {
+        _p2HoughConfig = std::make_shared<HoughConfig>(houghConfigNode);
     }
 }
 
@@ -80,20 +84,58 @@ void Solution::generateEdge(const cv::Mat& input, cv::Mat& output) {
     cv::gpu::GpuMat d_blurred, d_output;
 
     // Run Gaussian blur
-    cv::gpu::GaussianBlur(
-        d_input, d_blurred, cv::Size(_gaussianSize, _gaussianSize), _gaussianSigma);
+    cv::gpu::GaussianBlur(d_input,
+                          d_blurred,
+                          cv::Size(_p2EdgeConfig->_gaussianSize, _p2EdgeConfig->_gaussianSize),
+                          _p2EdgeConfig->_gaussianSigma);
     // Compute edges
     // First convert to uchar8 matrix
     d_blurred.convertTo(d_blurred, CV_8UC1);
-    cv::gpu::Canny(d_blurred, d_output, _lowerThreshold, _upperThreshold, _sobelApertureSize);
+    cv::gpu::Canny(d_blurred,
+                   d_output,
+                   _p2EdgeConfig->_lowerThreshold,
+                   _p2EdgeConfig->_upperThreshold,
+                   _p2EdgeConfig->_sobelApertureSize);
     // Copy result back to output
     d_output.download(output);
 }
 
 void Solution::gpuGaussian(const cv::Mat& input, cv::Mat& output) {
-    cv::Mat colGaussian = cv::getGaussianKernel(_gaussianSize, _gaussianSigma, CV_32F);
+    cv::Mat colGaussian =
+        cv::getGaussianKernel(_p2EdgeConfig->_gaussianSize, _p2EdgeConfig->_gaussianSigma, CV_32F);
     cv::Mat rowGaussian;
     cv::transpose(colGaussian, rowGaussian);
     // Running CUDA convolution
     separableConvolution(input, rowGaussian, colGaussian, output);
+}
+
+// Serial implementation of Hough transform accumulation
+void Solution::houghLinesAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulator) {
+    static constexpr int MIN_THETA = -90;
+    static constexpr int MAX_THETA = 90;
+    static constexpr int THETA_WIDTH = MAX_THETA - MIN_THETA;
+    size_t maxDist = ceil(cv::sqrt(edgeMask.rows * edgeMask.rows + edgeMask.cols * edgeMask.cols));
+    std::cout << "MaxDist = " << maxDist << std::endl;
+
+    accumulator = cv::Mat(2 * maxDist, THETA_WIDTH, CV_32SC1);
+    accumulator = cv::Scalar(0);
+
+    // Iterate over the mask
+    for (unsigned int y = 0; y < edgeMask.rows; y++) {
+        for (unsigned int x = 0; x < edgeMask.cols; x++) {
+            if (edgeMask.at<unsigned char>(y, x, 0) != 0) {
+                // Vote in Hough accumulator
+                for (int theta = MIN_THETA; theta < MAX_THETA; theta++) {
+                    double thetaRad = theta * PI / 180.0;
+                    unsigned int rho = round(x * cos(thetaRad) + y * sin(thetaRad)) + maxDist;
+                    accumulator.at<int>(rho, theta - MIN_THETA, 0) += 1;
+                }
+            }
+        }
+    }
+}
+
+void Solution::houghCudaAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulator) {
+    houghAccumulate(
+        edgeMask, _p2HoughConfig->_rhoBinSize, _p2HoughConfig->_thetaBinSize, accumulator);
 }
