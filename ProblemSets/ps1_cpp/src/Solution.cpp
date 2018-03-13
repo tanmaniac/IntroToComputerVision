@@ -110,10 +110,7 @@ void Solution::gpuGaussian(const cv::Mat& input, cv::Mat& output) {
 }
 
 // Serial implementation of Hough transform accumulation
-void Solution::houghLinesAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulator) {
-    static constexpr int MIN_THETA = -90;
-    static constexpr int MAX_THETA = 90;
-    static constexpr int THETA_WIDTH = MAX_THETA - MIN_THETA;
+void Solution::serialHoughLinesAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulator) {
     size_t maxDist = ceil(cv::sqrt(edgeMask.rows * edgeMask.rows + edgeMask.cols * edgeMask.cols));
     std::cout << "MaxDist = " << maxDist << std::endl;
 
@@ -135,11 +132,50 @@ void Solution::houghLinesAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulato
     }
 }
 
-void Solution::houghCudaAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulator) {
-    houghAccumulate(
+void Solution::houghLinesAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulator) {
+    cuda::houghAccumulate(
         edgeMask, _p2HoughConfig->_rhoBinSize, _p2HoughConfig->_thetaBinSize, accumulator);
 }
 
-void Solution::cudaFindLocalMaxima(const cv::Mat& accumulator, cv::Mat& localMaximaMask) {
-    findLocalMaxima(accumulator, localMaximaMask);
+void Solution::findLocalMaxima(const cv::Mat& accumulator,
+                               std::vector<std::pair<unsigned int, unsigned int>>& localMaxima) {
+    cuda::findLocalMaxima(
+        accumulator, _p2HoughConfig->_numPeaks, _p2HoughConfig->_threshold, localMaxima);
+}
+
+std::pair<int, int>
+    Solution::rowColToRhoTheta(const std::pair<unsigned int, unsigned int>& coordinates,
+                               const cv::Mat& inputImage,
+                               const HoughConfig& config) {
+    const size_t diagDist =
+        ceil(sqrt(inputImage.rows * inputImage.rows + inputImage.cols * inputImage.cols));
+    int rho = coordinates.first * config._rhoBinSize - diagDist;
+    int theta = coordinates.second * config._thetaBinSize + MIN_THETA;
+    return std::make_pair(rho, theta);
+}
+
+void Solution::drawLineParametric(cv::Mat& image,
+                                  const float rho,
+                                  const float theta,
+                                  const cv::Scalar color) {
+    float thetaRad = theta * PI / 180.f;
+    cv::Point2f start, end;
+    // Make sure line isn't vertical
+    if (thetaRad != 0) {
+        start.x = 0;
+        end.x = image.cols;
+
+        float slope = -1.f * cos(thetaRad) / sin(thetaRad);
+        float c = rho / sin(thetaRad);
+
+        start.y = slope * start.x + c;
+        end.y = slope * end.x + c;
+    } else {
+        // Line is vertical
+        start.y = 0;
+        end.y = image.rows;
+        start.x = end.x = rho / cos(thetaRad);
+    }
+
+    cv::line(image, start, end, color);
 }

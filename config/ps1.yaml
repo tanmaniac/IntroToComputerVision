@@ -20,4 +20,6 @@ edge_detector_p2:
 hough_transform_p2:
   rho_bin_size: 2
   theta_bin_size: 2
+  num_peaks: 9
+  threshold: 200
 ...

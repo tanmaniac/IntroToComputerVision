@@ -2,6 +2,7 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <chrono>
 #include <iostream>
@@ -18,11 +19,34 @@ int main() {
 
     // Find lines in image
     cv::Mat accumulator;
-    mySol.houghCudaAccumulate(detectedEdges, accumulator);
+    mySol.houghLinesAccumulate(detectedEdges, accumulator);
 
     cv::imwrite(mySol._outputPathPrefix + "/ps1-2-a-1.png", accumulator);
 
     // Find local maxima
-    cv::Mat localMaximaMask;
-    mySol.cudaFindLocalMaxima(accumulator, localMaximaMask);
+    std::vector<std::pair<unsigned int, unsigned int>> localMaxima;
+    mySol.findLocalMaxima(accumulator, localMaxima);
+
+    // Print local maxima
+    std::cout << "Found maxima:" << std::endl;
+    for (const auto& val : localMaxima) {
+        std::cout << "  (row = " << val.first << ", col = " << val.second << ")" << std::endl;
+    }
+
+    // Convert those local maxima to rho and theta values
+    std::vector<std::pair<int, int>> rhoThetaVals;
+    std::cout << "Maxima rho, theta values:" << std::endl;
+    for (const auto& val : localMaxima) {
+        auto rt = mySol.rowColToRhoTheta(val, mySol._input0, *(mySol._p2HoughConfig));
+        rhoThetaVals.push_back(rt);
+        std::cout << "  (rho = " << rt.first << ", theta = " << rt.second << ")" << std::endl;
+    }
+
+    // Draw onto image
+    cv::Mat drawnLines;
+    cv::cvtColor(mySol._input0, drawnLines, CV_GRAY2RGB);
+    for (const auto& val : rhoThetaVals) {
+        mySol.drawLineParametric(drawnLines, val.first, val.second, CV_RGB(0x00, 0xFF, 0x00));
+    }
+    cv::imwrite(mySol._outputPathPrefix + "/ps1-2-c-1.png", drawnLines);
 }

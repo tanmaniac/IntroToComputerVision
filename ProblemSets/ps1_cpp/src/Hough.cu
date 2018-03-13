@@ -1,19 +1,20 @@
 #include <common/CudaCommon.cuh>
 #include "Hough.h"
 
-#include <opencv2/core/cuda_devptrs.hpp>
-#include <thrust/functional.h>
 #include <thrust/device_vector.h>
+#include <thrust/functional.h>
+#include <thrust/remove.h>
+#include <thrust/sort.h>
+#include <opencv2/core/cuda_devptrs.hpp>
 
 #include <iostream>
 #include <thread>
+#include <utility>
+#include <vector>
 
 // Compute Hough transform accumulator matrix and local maxima in Hough space
 
 #define PI 3.14159265
-#define MIN_THETA -90
-#define MAX_THETA 91
-#define THETA_WIDTH (MAX_THETA - MIN_THETA)
 
 __host__ __device__ inline float degToRad(float theta) {
     return theta * PI / 180.f;
@@ -50,12 +51,46 @@ __global__ void houghAccumulateKernel(const cv::gpu::PtrStepSz<unsigned char> ed
     }
 }
 
+struct HoughPoint2D {
+    int _votes;
+    unsigned int _rho, _theta;
+    bool _isLocalMaxima = false;
+
+    __host__ __device__ HoughPoint2D() : _votes(0), _rho(0), _theta(0) {}
+
+    __host__ __device__ HoughPoint2D(int votes, unsigned int rho, unsigned int theta)
+        : _votes(votes), _rho(rho), _theta(theta) {}
+
+    __host__ __device__
+        HoughPoint2D(int votes, unsigned int rho, unsigned int theta, bool isLocalMaxima)
+        : _votes(votes), _rho(rho), _theta(theta), _isLocalMaxima(isLocalMaxima) {}
+
+    __host__ __device__ friend bool operator<(const HoughPoint2D& lhs, const HoughPoint2D& rhs) {
+        return lhs._votes < rhs._votes;
+    }
+
+    __host__ __device__ friend bool operator>(const HoughPoint2D& lhs, const HoughPoint2D& rhs) {
+        return rhs < lhs;
+    }
+
+    __host__ __device__ friend bool operator<=(const HoughPoint2D& lhs, const HoughPoint2D& rhs) {
+        return !(lhs > rhs);
+    }
+
+    __host__ __device__ friend bool operator>=(const HoughPoint2D& lhs, const HoughPoint2D& rhs) {
+        return !(rhs < lhs);
+    }
+};
+
 /**
  * \brief Find the local maxima of the Hough transform accumulator. If it's a maxima, set the index
  * in the mask output to 1; if not, set to 0.
+ * \param accumulator Hough transform accumulator matrix, where y axis is rho and x axis is theta
+ * \param localMaximaPoints Binary mask of local maxima, where 1 is marked as being a local maxima
+ * and 0 is not
  */
 __global__ void findLocalMaximaKernel(const cv::gpu::PtrStepSz<int> accumulator,
-                                      cv::gpu::PtrStepSz<unsigned char> localMaximaMask) {
+                                      HoughPoint2D* localMaximaPoints) {
     const uint2 threadPos = getPosition();
 
     // Return if outside the bounds of the image
@@ -63,38 +98,45 @@ __global__ void findLocalMaximaKernel(const cv::gpu::PtrStepSz<int> accumulator,
         return;
     }
 
+    const unsigned int threadLoc = convert2dTo1d(threadPos, accumulator.cols);
+
     // TODO: use shared memory
-    bool isBig = true;
-    for (int y = max(0, int(threadPos.y) - 1); y < min(accumulator.rows - 1, threadPos.y + 1); y++) {
-        for (int x = max(0, int(threadPos.x) - 1); x < min(accumulator.cols - 1, threadPos.x + 1); x++) {
+    bool isLocalMaxima = true;
+    for (int y = max(0, int(threadPos.y) - 1); y < min(accumulator.rows - 1, threadPos.y + 1);
+         y++) {
+        for (int x = max(0, int(threadPos.x) - 1); x < min(accumulator.cols - 1, threadPos.x + 1);
+             x++) {
             if (accumulator(y, x) > accumulator(threadPos.y, threadPos.x)) {
-                isBig = false;
+                isLocalMaxima = false;
             }
         }
     }
 
-    localMaximaMask(threadPos.y, threadPos.x) = isBig ? 1 : 0;
+    localMaximaPoints[threadLoc] = HoughPoint2D(
+        accumulator(threadPos.y, threadPos.x), threadPos.y, threadPos.x, isLocalMaxima);
 }
 
-template <typename T>
-struct Threshold : public thrust::binary_function<T, unsigned int, bool> {
-    __host__ __device__ bool operator()(const T val, const unsigned int threshold) {
-        return val >= threshold;
+//-----------------------------------------------------------------------------
+// C++ wrappers
+
+// Model of Predicate that returns true if the input point both is a local maxima and has a vote
+// count greater than the set threshold.
+struct MaskAndThreshold {
+    int _threshold;
+
+    __host__ __device__ MaskAndThreshold() : _threshold(0) {}
+
+    __host__ __device__ MaskAndThreshold(int threshold) : _threshold(threshold) {}
+
+    __host__ __device__ bool operator()(const HoughPoint2D& val) {
+        return !(val._isLocalMaxima && val._votes >= _threshold);
     }
 };
 
-template <typename T>
-struct BinaryMask : public thrust::unary_function<T, bool> {
-    __host__ __device__ bool operator()(const T val) {
-        return val != 0;
-    }
-});
-
-// C++ wrappers
-void houghAccumulate(const cv::gpu::GpuMat& edgeMask,
-                     const size_t rhoBinSize,
-                     const size_t thetaBinSize,
-                     cv::gpu::GpuMat& accumulator) {
+void cuda::houghAccumulate(const cv::gpu::GpuMat& edgeMask,
+                           const size_t rhoBinSize,
+                           const size_t thetaBinSize,
+                           cv::gpu::GpuMat& accumulator) {
     assert(edgeMask.type() == CV_8UC1);
     static constexpr size_t TILE_SIZE = 16;
 
@@ -119,10 +161,10 @@ void houghAccumulate(const cv::gpu::GpuMat& edgeMask,
     checkCudaErrors(cudaGetLastError());
 }
 
-void houghAccumulate(const cv::Mat& edgeMask,
-                     const size_t rhoBinSize,
-                     const size_t thetaBinSize,
-                     cv::Mat& accumulator) {
+void cuda::houghAccumulate(const cv::Mat& edgeMask,
+                           const size_t rhoBinSize,
+                           const size_t thetaBinSize,
+                           cv::Mat& accumulator) {
     assert(edgeMask.type() == CV_8UC1);
     cv::gpu::GpuMat d_edgeMask, d_accumulator;
 
@@ -136,31 +178,52 @@ void houghAccumulate(const cv::Mat& edgeMask,
     d_accumulator.download(accumulator);
 }
 
-void findLocalMaxima(const cv::gpu::GpuMat& accumulator, cv::gpu::GpuMat& localMaximaMask) {
+void cuda::findLocalMaxima(const cv::gpu::GpuMat& accumulator,
+                           const size_t numPeaks,
+                           const int threshold,
+                           std::vector<std::pair<unsigned int, unsigned int>>& localMaxima) {
     static constexpr size_t TILE_SIZE = 16;
 
-    localMaximaMask.create(accumulator.rows, accumulator.cols, CV_8UC1);
+    thrust::device_vector<HoughPoint2D> localMaximaPoints(accumulator.rows * accumulator.cols);
 
     // Determine block and grid size
     dim3 blocks(max(1, (unsigned int)ceil(float(accumulator.cols) / float(TILE_SIZE))),
                 max(1, (unsigned int)ceil(float(accumulator.rows) / float(TILE_SIZE))));
     dim3 threads(TILE_SIZE, TILE_SIZE);
 
-    findLocalMaximaKernel<<<dim3(1, blocks.y), threads>>>(accumulator, localMaximaMask);
+    findLocalMaximaKernel<<<blocks, threads>>>(accumulator, localMaximaPoints.data().get());
     cudaDeviceSynchronize();
     checkCudaErrors(cudaGetLastError());
 
-    // Filter by threshold, where threshold is the minimum number of votes required to count as a peak
+    // Filter by threshold, where threshold is the minimum number of votes required to count as a
+    // peak
+    // thrust::device_vector<HoughPoint2D>::iterator threshEnd = thrust::remove_if(
+    auto threshEnd = thrust::remove_if(
+        localMaximaPoints.begin(), localMaximaPoints.end(), MaskAndThreshold(threshold));
 
+    // Sort points by threshold values in descending order
+    thrust::stable_sort(localMaximaPoints.begin(), threshEnd, thrust::greater<HoughPoint2D>());
+
+    // Figure out how many values to copy
+    thrust::device_vector<HoughPoint2D>::iterator copyEnd =
+        (numPeaks < threshEnd - localMaximaPoints.begin()) ? localMaximaPoints.begin() + numPeaks
+                                                           : threshEnd;
+
+    // Transfrom the masked and thresholded points into pairs of (rho, theta) values
+    for (auto begin = localMaximaPoints.begin(); begin < copyEnd; begin++) {
+        unsigned int rho = static_cast<HoughPoint2D>(*begin)._rho;
+        unsigned int theta = static_cast<HoughPoint2D>(*begin)._theta;
+        localMaxima.emplace_back(std::make_pair(rho, theta));
+    }
 }
 
-void findLocalMaxima(const cv::Mat& accumulator, cv::Mat& localMaximaMask) {
+void cuda::findLocalMaxima(const cv::Mat& accumulator,
+                           const size_t numPeaks,
+                           const int threshold,
+                           std::vector<std::pair<unsigned int, unsigned int>>& localMaxima) {
     cv::gpu::GpuMat d_accumulator, d_localMaximaMask;
 
     // Copy to GPU
     d_accumulator.upload(accumulator);
-    findLocalMaxima(d_accumulator, d_localMaximaMask);
-
-    // Copy back to CPU
-    d_localMaximaMask.download(localMaximaMask);
+    findLocalMaxima(d_accumulator, numPeaks, threshold, localMaxima);
 }

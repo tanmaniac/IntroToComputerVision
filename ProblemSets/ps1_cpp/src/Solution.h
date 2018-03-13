@@ -14,6 +14,8 @@ public:
         const float _gaussianSigma;
         const double _lowerThreshold, _upperThreshold, _sobelApertureSize;
 
+        EdgeDetectConfig() = default;
+
         EdgeDetectConfig(const YAML::Node& edgeDetectNode)
             : _gaussianSize(edgeDetectNode["gaussian_size"].as<size_t>()),
               _gaussianSigma(edgeDetectNode["gaussian_sigma"].as<float>()),
@@ -23,11 +25,14 @@ public:
     };
 
     struct HoughConfig {
-        const size_t _rhoBinSize, _thetaBinSize;
+        const size_t _rhoBinSize, _thetaBinSize, _numPeaks;
+        const int _threshold;
 
         HoughConfig(const YAML::Node& houghNode)
             : _rhoBinSize(houghNode["rho_bin_size"].as<size_t>()),
-              _thetaBinSize(houghNode["theta_bin_size"].as<size_t>()) {}
+              _thetaBinSize(houghNode["theta_bin_size"].as<size_t>()),
+              _threshold(houghNode["threshold"].as<int>()),
+              _numPeaks(houghNode["num_peaks"].as<size_t>()) {}
     };
 
     // TODO: Is there any way I can use an intialization list for this? Everything is loaded from
@@ -53,8 +58,8 @@ public:
      *  Computes the Hough Transform for lines and produces an accumulator array.
      */
     std::shared_ptr<HoughConfig> _p2HoughConfig;
+    void serialHoughLinesAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulator);
     void houghLinesAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulator);
-    void houghCudaAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulator);
 
     /**
      * Problem 2.b.
@@ -63,7 +68,29 @@ public:
      * and then convert them (back) to line parameters in cartesian coordinates (you can then use
      * regular line-drawing functions).
      */
-    void cudaFindLocalMaxima(const cv::Mat& accumulator, cv::Mat& localMaximaMask);
+    void findLocalMaxima(const cv::Mat& accumulator,
+                         std::vector<std::pair<unsigned int, unsigned int>>& localMaxima);
+
+    /**
+     * Problem 2.c.
+     * Write a function hough_lines_draw to draw color lines that correspond to peaks found in the
+     * accumulator array. This means you need to look up rho, theta values using the peak indices,
+     * and then convert them (back) to line parameters in cartesian coordinates (you can then use
+     * regular line-drawing functions).
+     *
+     * Use this to draw lines on the original grayscale (not edge) image. The lines should extend to
+     * the edges of the image (aka infinite lines)
+     */
+    // Convert a row x column value computed by findLocalMaxima to a rho x theta value. This just
+    // adjusts the row, column value to account for the bin sizes and the diagonal size of the
+    // image.
+    std::pair<int, int> rowColToRhoTheta(const std::pair<unsigned int, unsigned int>& coordinates,
+                                         const cv::Mat& inputImage,
+                                         const HoughConfig& config);
+    void drawLineParametric(cv::Mat& image,
+                            const float rho,
+                            const float theta,
+                            const cv::Scalar color);
 
     // Matrices representing each image
     // TODO: I don't like that these are not const @tanmaniac
