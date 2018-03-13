@@ -41,7 +41,8 @@ Solution::Solution(const std::string& configFilePath) {
     // Load the images from the paths that were just read
     _input0 = cv::imread(_input0Path, CV_LOAD_IMAGE_GRAYSCALE);
     _input0.convertTo(_input0, CV_32FC1);
-    _input0Noise = cv::imread(_input0NoisePath, CV_LOAD_IMAGE_COLOR);
+    _input0Noise = cv::imread(_input0NoisePath, CV_LOAD_IMAGE_GRAYSCALE);
+    _input0Noise.convertTo(_input0Noise, CV_32FC1);
     _input1 = cv::imread(_input1Path, CV_LOAD_IMAGE_COLOR);
     _input2 = cv::imread(_input2Path, CV_LOAD_IMAGE_COLOR);
     _input3 = cv::imread(_input3Path, CV_LOAD_IMAGE_COLOR);
@@ -67,6 +68,14 @@ Solution::Solution(const std::string& configFilePath) {
     if (YAML::Node houghConfigNode = config["hough_transform_p2"]) {
         _p2HoughConfig = std::make_shared<HoughConfig>(houghConfigNode);
     }
+
+    if (YAML::Node edgeDetectNode = config["edge_detector_p3"]) {
+        _p3EdgeConfig = std::make_shared<EdgeDetectConfig>(edgeDetectNode);
+    }
+
+    if (YAML::Node houghConfigNode = config["hough_transform_p3"]) {
+        _p3HoughConfig = std::make_shared<HoughConfig>(houghConfigNode);
+    }
 }
 
 bool Solution::makeDir(const std::string& dirPath) {
@@ -79,30 +88,30 @@ bool Solution::makeDir(const std::string& dirPath) {
 }
 
 // Run on GPU
-void Solution::generateEdge(const cv::Mat& input, cv::Mat& output) {
+void Solution::generateEdge(const cv::Mat& input, const EdgeDetectConfig& config, cv::Mat& output) {
     cv::gpu::GpuMat d_input(input);
     cv::gpu::GpuMat d_blurred, d_output;
 
     // Run Gaussian blur
     cv::gpu::GaussianBlur(d_input,
                           d_blurred,
-                          cv::Size(_p2EdgeConfig->_gaussianSize, _p2EdgeConfig->_gaussianSize),
-                          _p2EdgeConfig->_gaussianSigma);
+                          cv::Size(config._gaussianSize, config._gaussianSize),
+                          config._gaussianSigma);
     // Compute edges
     // First convert to uchar8 matrix
     d_blurred.convertTo(d_blurred, CV_8UC1);
     cv::gpu::Canny(d_blurred,
                    d_output,
-                   _p2EdgeConfig->_lowerThreshold,
-                   _p2EdgeConfig->_upperThreshold,
-                   _p2EdgeConfig->_sobelApertureSize);
+                   config._lowerThreshold,
+                   config._upperThreshold,
+                   config._sobelApertureSize);
     // Copy result back to output
     d_output.download(output);
 }
 
-void Solution::gpuGaussian(const cv::Mat& input, cv::Mat& output) {
+void Solution::gpuGaussian(const cv::Mat& input, const EdgeDetectConfig& config, cv::Mat& output) {
     cv::Mat colGaussian =
-        cv::getGaussianKernel(_p2EdgeConfig->_gaussianSize, _p2EdgeConfig->_gaussianSigma, CV_32F);
+        cv::getGaussianKernel(config._gaussianSize, config._gaussianSigma, CV_32F);
     cv::Mat rowGaussian;
     cv::transpose(colGaussian, rowGaussian);
     // Running CUDA convolution
@@ -132,15 +141,16 @@ void Solution::serialHoughLinesAccumulate(const cv::Mat& edgeMask, cv::Mat& accu
     }
 }
 
-void Solution::houghLinesAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulator) {
-    cuda::houghAccumulate(
-        edgeMask, _p2HoughConfig->_rhoBinSize, _p2HoughConfig->_thetaBinSize, accumulator);
+void Solution::houghLinesAccumulate(const cv::Mat& edgeMask,
+                                    const HoughConfig& config,
+                                    cv::Mat& accumulator) {
+    cuda::houghAccumulate(edgeMask, config._rhoBinSize, config._thetaBinSize, accumulator);
 }
 
 void Solution::findLocalMaxima(const cv::Mat& accumulator,
+                               const HoughConfig& config,
                                std::vector<std::pair<unsigned int, unsigned int>>& localMaxima) {
-    cuda::findLocalMaxima(
-        accumulator, _p2HoughConfig->_numPeaks, _p2HoughConfig->_threshold, localMaxima);
+    cuda::findLocalMaxima(accumulator, config._numPeaks, config._threshold, localMaxima);
 }
 
 std::pair<int, int>

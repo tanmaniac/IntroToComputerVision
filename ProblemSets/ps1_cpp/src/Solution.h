@@ -49,9 +49,9 @@ public:
      * parameters (like ‘canny’) play with those until you get the edges you would expect to see.
      */
     std::shared_ptr<EdgeDetectConfig> _p2EdgeConfig;
-    void generateEdge(const cv::Mat& input, cv::Mat& output);
+    void generateEdge(const cv::Mat& input, const EdgeDetectConfig& config, cv::Mat& output);
     // Using my separable convolution implementation
-    void gpuGaussian(const cv::Mat& input, cv::Mat& output);
+    void gpuGaussian(const cv::Mat& input, const EdgeDetectConfig& config, cv::Mat& output);
 
     /**
      * Problem 2.a.
@@ -59,7 +59,9 @@ public:
      */
     std::shared_ptr<HoughConfig> _p2HoughConfig;
     void serialHoughLinesAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulator);
-    void houghLinesAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulator);
+    void houghLinesAccumulate(const cv::Mat& edgeMask,
+                              const HoughConfig& config,
+                              cv::Mat& accumulator);
 
     /**
      * Problem 2.b.
@@ -69,6 +71,7 @@ public:
      * regular line-drawing functions).
      */
     void findLocalMaxima(const cv::Mat& accumulator,
+                         const HoughConfig& config,
                          std::vector<std::pair<unsigned int, unsigned int>>& localMaxima);
 
     /**
@@ -91,6 +94,27 @@ public:
                             const float rho,
                             const float theta,
                             const cv::Scalar color);
+
+    /**
+     * Problem 3
+     * Use ps1-input0-noise.png - same image as before, but with noise. Compute a modestly smoothed
+     * version of this image by using a Gaussian filter. Make σ at least a few pixels big.
+     * Output:
+     * Smoothed image: ps1-3-a-1.png
+     *
+     * Using an edge operator of your choosing, create a binary edge image for both the original
+     * image (ps1-input0-noise.png) and the smoothed version above. Output: Two edge images:
+     *  ps1-3-b-1.png (from original), ps1-3-b-2.png (from smoothed)
+     *
+     * Now apply your Hough method to the smoothed version of the edge image. Your goal is to adjust
+     * the filtering, edge finding, and Hough algorithms to find the lines as best you can in this
+     * test case.
+     * Output:
+     *  - Hough accumulator array image with peaks highlighted: ps1-3-c-1.png
+     *  - Intensity image (original one with the noise) with lines drawn on them: ps1-3-c-2.png
+     */
+    std::shared_ptr<EdgeDetectConfig> _p3EdgeConfig;
+    std::shared_ptr<HoughConfig> _p3HoughConfig;
 
     // Matrices representing each image
     // TODO: I don't like that these are not const @tanmaniac
