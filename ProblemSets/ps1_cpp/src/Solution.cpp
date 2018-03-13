@@ -177,5 +177,5 @@ void Solution::drawLineParametric(cv::Mat& image,
         start.x = end.x = rho / cos(thetaRad);
     }
 
-    cv::line(image, start, end, color);
+    cv::line(image, start, end, color, 2);
 }
