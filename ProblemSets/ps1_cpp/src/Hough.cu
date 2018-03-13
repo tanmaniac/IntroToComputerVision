@@ -2,6 +2,8 @@
 #include "Hough.h"
 
 #include <opencv2/core/cuda_devptrs.hpp>
+#include <thrust/functional.h>
+#include <thrust/device_vector.h>
 
 #include <iostream>
 #include <thread>
@@ -10,7 +12,7 @@
 
 #define PI 3.14159265
 #define MIN_THETA -90
-#define MAX_THETA 90
+#define MAX_THETA 91
 #define THETA_WIDTH (MAX_THETA - MIN_THETA)
 
 __host__ __device__ inline float degToRad(float theta) {
@@ -48,6 +50,46 @@ __global__ void houghAccumulateKernel(const cv::gpu::PtrStepSz<unsigned char> ed
     }
 }
 
+/**
+ * \brief Find the local maxima of the Hough transform accumulator. If it's a maxima, set the index
+ * in the mask output to 1; if not, set to 0.
+ */
+__global__ void findLocalMaximaKernel(const cv::gpu::PtrStepSz<int> accumulator,
+                                      cv::gpu::PtrStepSz<unsigned char> localMaximaMask) {
+    const uint2 threadPos = getPosition();
+
+    // Return if outside the bounds of the image
+    if (threadPos.x >= accumulator.cols || threadPos.y >= accumulator.rows) {
+        return;
+    }
+
+    // TODO: use shared memory
+    bool isBig = true;
+    for (int y = max(0, int(threadPos.y) - 1); y < min(accumulator.rows - 1, threadPos.y + 1); y++) {
+        for (int x = max(0, int(threadPos.x) - 1); x < min(accumulator.cols - 1, threadPos.x + 1); x++) {
+            if (accumulator(y, x) > accumulator(threadPos.y, threadPos.x)) {
+                isBig = false;
+            }
+        }
+    }
+
+    localMaximaMask(threadPos.y, threadPos.x) = isBig ? 1 : 0;
+}
+
+template <typename T>
+struct Threshold : public thrust::binary_function<T, unsigned int, bool> {
+    __host__ __device__ bool operator()(const T val, const unsigned int threshold) {
+        return val >= threshold;
+    }
+};
+
+template <typename T>
+struct BinaryMask : public thrust::unary_function<T, bool> {
+    __host__ __device__ bool operator()(const T val) {
+        return val != 0;
+    }
+});
+
 // C++ wrappers
 void houghAccumulate(const cv::gpu::GpuMat& edgeMask,
                      const size_t rhoBinSize,
@@ -64,7 +106,7 @@ void houghAccumulate(const cv::gpu::GpuMat& edgeMask,
     accumulator.create(rhoBins, thetaBins, CV_32SC1);
     std::cout << "accumulator size = " << accumulator.rows << " x " << accumulator.cols
               << std::endl;
-    
+
     // Determine block and grid size
     dim3 blocks(max(1, (unsigned int)ceil(float(edgeMask.cols) / float(TILE_SIZE))),
                 max(1, (unsigned int)ceil(float(edgeMask.rows) / float(TILE_SIZE))));
@@ -92,4 +134,33 @@ void houghAccumulate(const cv::Mat& edgeMask,
 
     // Copy result back to CPU
     d_accumulator.download(accumulator);
+}
+
+void findLocalMaxima(const cv::gpu::GpuMat& accumulator, cv::gpu::GpuMat& localMaximaMask) {
+    static constexpr size_t TILE_SIZE = 16;
+
+    localMaximaMask.create(accumulator.rows, accumulator.cols, CV_8UC1);
+
+    // Determine block and grid size
+    dim3 blocks(max(1, (unsigned int)ceil(float(accumulator.cols) / float(TILE_SIZE))),
+                max(1, (unsigned int)ceil(float(accumulator.rows) / float(TILE_SIZE))));
+    dim3 threads(TILE_SIZE, TILE_SIZE);
+
+    findLocalMaximaKernel<<<dim3(1, blocks.y), threads>>>(accumulator, localMaximaMask);
+    cudaDeviceSynchronize();
+    checkCudaErrors(cudaGetLastError());
+
+    // Filter by threshold, where threshold is the minimum number of votes required to count as a peak
+
+}
+
+void findLocalMaxima(const cv::Mat& accumulator, cv::Mat& localMaximaMask) {
+    cv::gpu::GpuMat d_accumulator, d_localMaximaMask;
+
+    // Copy to GPU
+    d_accumulator.upload(accumulator);
+    findLocalMaxima(d_accumulator, d_localMaximaMask);
+
+    // Copy back to CPU
+    d_localMaximaMask.download(localMaximaMask);
 }

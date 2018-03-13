@@ -14,3 +14,7 @@ void houghAccumulate(const cv::Mat& edgeMask,
                      const size_t rhoBinSize,
                      const size_t thetaBinSize,
                      cv::Mat& accumulator);
+
+void findLocalMaxima(const cv::gpu::GpuMat& accumulator, cv::gpu::GpuMat& localMaximaMask);
+
+void findLocalMaxima(const cv::Mat& accumulator, cv::Mat& localMaximaMask);

@@ -18,6 +18,6 @@ edge_detector_p2:
   sobel_aperture_size: 3
 
 hough_transform_p2:
-  rho_bin_size: 3
-  theta_bin_size: 3
+  rho_bin_size: 2
+  theta_bin_size: 2
 ...

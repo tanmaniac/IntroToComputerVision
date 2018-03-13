@@ -55,15 +55,26 @@ public:
     std::shared_ptr<HoughConfig> _p2HoughConfig;
     void houghLinesAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulator);
     void houghCudaAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulator);
+
+    /**
+     * Problem 2.b.
+     *  Write a function hough_lines_draw to draw color lines that correspond to peaks found in the
+     * accumulator array. This means you need to look up rho, theta values using the peak indices,
+     * and then convert them (back) to line parameters in cartesian coordinates (you can then use
+     * regular line-drawing functions).
+     */
+    void cudaFindLocalMaxima(const cv::Mat& accumulator, cv::Mat& localMaximaMask);
+
     // Matrices representing each image
     // TODO: I don't like that these are not const @tanmaniac
     cv::Mat _input0, _input0Noise, _input1, _input2, _input3;
 
+    // Output path prefix
+    std::string _outputPathPrefix;
+
 private:
     // Create a directory
     bool makeDir(const std::string& dirPath);
-    // Output path prefix
-    std::string _outputPathPrefix;
 
     // Paths to each of the input images
     std::string _input0Path, _input0NoisePath, _input1Path, _input2Path, _input3Path;

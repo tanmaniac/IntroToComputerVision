@@ -139,3 +139,7 @@ void Solution::houghCudaAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulator
     houghAccumulate(
         edgeMask, _p2HoughConfig->_rhoBinSize, _p2HoughConfig->_thetaBinSize, accumulator);
 }
+
+void Solution::cudaFindLocalMaxima(const cv::Mat& accumulator, cv::Mat& localMaximaMask) {
+    findLocalMaxima(accumulator, localMaximaMask);
+}
