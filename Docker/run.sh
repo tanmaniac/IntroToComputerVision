@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
-REPO="tanmay"
-IMAGE="cuda-opencv"
+REPO="tanmaniac"
+IMAGE="opencv3-cudagl"
 TAG="ud810"
 
 if [ ! "$(docker ps -q -f name=${TAG})" ]; then
