@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
 REPO="tanmay"
-IMAGE="cudagl"
+IMAGE="cuda-opencv"
 TAG="ud810"
 
 docker build --build-arg UID=$(id -u) \
