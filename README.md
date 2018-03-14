@@ -13,14 +13,33 @@ I try to accelerate all of the assignments with CUDA, so you will need an Nvidia
 
 Follow [Nvidia's CUDA installation instructions](http://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html) to install CUDA. 
 
-You should be able to pull the rest of the necessary dependencies with
+From here, there are two options: building in **Docker** or just building locally on a host machine.
+
+### Containerized Build in Docker
+
+- Install Docker-CE as described for your distribution on the [Docker docs](https://docs.docker.com/install/).
+    - Follow the [Optional Linux post-installation](https://docs.docker.com/install/linux/linux-postinstall/) steps to run Docker without `sudo`.
+- Install nvidia-docker2 as described in the [`nvidia-docker` docs](https://github.com/nvidia/nvidia-docker/wiki/Installation-(version-2.0)). The container provided in this repo needs the `nvidia` Docker runtime to run.
+- Clone this repo and build/run the Docker container:
+
 ```bash
-sudo apt-get update && sudo apt-get install -y libopencv-dev python-opencv build-essential cmake clang-format
+cd IntroToComputerVision/Docker
+# Build the Docker container
+./build.sh
+# Run the container
+./run.sh
 ```
+
+This will drop you into a shell where you can follow the build steps below. The `IntroToComputerVision` directory (this one) is mapped to `${HOME}/IntroToComputerVision` in the Docker container.
+
+### Build on host
+
+- Build OpenCV 3.4.1 as directed in the OpenCV documentation. Make sure to add the `-DWITH_CUDA=ON` CMake flag to compile CUDA features.
 
 ## Building
 
 ```bash
+# Navigate to wherever you cloned this repo first
 mkdir build && cd build
 cmake ..
 make -j
