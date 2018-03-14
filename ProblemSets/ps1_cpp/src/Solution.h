@@ -12,7 +12,8 @@ public:
     struct EdgeDetectConfig {
         const size_t _gaussianSize;
         const float _gaussianSigma;
-        const double _lowerThreshold, _upperThreshold, _sobelApertureSize;
+        const double _lowerThreshold, _upperThreshold;
+        const int _sobelApertureSize;
 
         EdgeDetectConfig() = default;
 
@@ -21,7 +22,7 @@ public:
               _gaussianSigma(edgeDetectNode["gaussian_sigma"].as<float>()),
               _lowerThreshold(edgeDetectNode["lower_threshold"].as<double>()),
               _upperThreshold(edgeDetectNode["upper_threshold"].as<double>()),
-              _sobelApertureSize(edgeDetectNode["sobel_aperture_size"].as<double>()) {}
+              _sobelApertureSize(edgeDetectNode["sobel_aperture_size"].as<int>()) {}
     };
 
     struct HoughConfig {

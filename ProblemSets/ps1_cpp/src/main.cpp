@@ -59,7 +59,7 @@ int main() {
 
         cv::Mat accumulator;
         sol.houghLinesAccumulate(edgeFromNoisy, *(sol._p3HoughConfig), accumulator);
-        cv::imwrite(sol._outputPathPrefix + "/ps1-3-a-1.png", accumulator);
+        cv::imwrite(sol._outputPathPrefix + "/ps1-3-c-1.png", accumulator);
 
         std::vector<std::pair<unsigned int, unsigned int>> localMaxima;
         sol.findLocalMaxima(accumulator, *(sol._p3HoughConfig), localMaxima);

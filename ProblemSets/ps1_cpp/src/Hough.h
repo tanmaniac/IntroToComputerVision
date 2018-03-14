@@ -1,7 +1,7 @@
 #pragma once
 
 #include <opencv2/core/core.hpp>
-#include <opencv2/gpu/gpu.hpp>
+#include <opencv2/core/cuda.hpp>
 
 #define MIN_THETA -90
 #define MAX_THETA 90
@@ -10,10 +10,10 @@
 // C++ wrappers around CUDA kernels
 
 namespace cuda {
-void houghAccumulate(const cv::gpu::GpuMat& edgeMask,
+void houghAccumulate(const cv::cuda::GpuMat& edgeMask,
                      const size_t rhoBinSize,
                      const size_t thetaBinSize,
-                     cv::gpu::GpuMat& accumulator);
+                     cv::cuda::GpuMat& accumulator);
 
 void houghAccumulate(const cv::Mat& edgeMask,
                      const size_t rhoBinSize,
@@ -28,7 +28,7 @@ void houghAccumulate(const cv::Mat& edgeMask,
  * \param localMaxima output vector of pairs, where the first value is the row and second value is
  * the column in which the peak was found
  */
-void findLocalMaxima(const cv::gpu::GpuMat& accumulator,
+void findLocalMaxima(const cv::cuda::GpuMat& accumulator,
                      const size_t numPeaks,
                      const int threshold,
                      std::vector<std::pair<unsigned int, unsigned int>>& localMaxima);

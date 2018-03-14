@@ -3,8 +3,6 @@
 FROM tanmaniac/opencv3-cudagl:latest
 LABEL maintainers="Tanmay Bangalore <tanmaybangalore@gmail.com>"
 
-RUN apt-get update && apt-get upgrade -y && apt-get install -y konsole
-
 # Make a home directory so everything isn't just owned by root
 ARG UID=1000
 ARG GID=1000

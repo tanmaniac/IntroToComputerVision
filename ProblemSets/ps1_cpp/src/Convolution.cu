@@ -4,7 +4,7 @@
 
 #include <cuda.h>
 #include <thrust/device_vector.h>
-#include <opencv2/gpu/gpu.hpp>
+#include <opencv2/core/cuda.hpp>
 
 #include <cassert>
 #include <thread>
@@ -141,9 +141,9 @@ __global__ void columnConvolutionKernel(const float* const input,
 
 //-----------------------------------------------------------------------------
 // C++ runner functions
-void rowConvolution(const cv::gpu::GpuMat& d_input,
-                    const cv::gpu::GpuMat& d_kernel,
-                    cv::gpu::GpuMat& d_dest) {
+void rowConvolution(const cv::cuda::GpuMat& d_input,
+                    const cv::cuda::GpuMat& d_kernel,
+                    cv::cuda::GpuMat& d_dest) {
     assert(d_input.channels() == 1 && d_kernel.channels() == 1 && d_kernel.rows == 1 &&
            d_input.type() == CV_32FC1 && d_kernel.type() == CV_32FC1);
 
@@ -153,7 +153,7 @@ void rowConvolution(const cv::gpu::GpuMat& d_input,
     const size_t kernelSize = d_kernel.cols;
     assert(kernelSize % 2 == 1);
 
-    d_dest = cv::gpu::createContinuous(rows, cols, d_input.type());
+    d_dest = cv::cuda::createContinuous(rows, cols, d_input.type());
 
     // Run convolution kernel
     dim3 blocks(max(1, (unsigned int)ceil(float(cols) / float(THREADS_PER_BLOCK))), rows);
@@ -174,9 +174,9 @@ void rowConvolution(const cv::gpu::GpuMat& d_input,
     checkCudaErrors(cudaGetLastError());
 }
 
-void columnConvolution(const cv::gpu::GpuMat& d_input,
-                       const cv::gpu::GpuMat& d_kernel,
-                       cv::gpu::GpuMat& d_dest) {
+void columnConvolution(const cv::cuda::GpuMat& d_input,
+                       const cv::cuda::GpuMat& d_kernel,
+                       cv::cuda::GpuMat& d_dest) {
     assert(d_input.channels() == 1 && d_kernel.channels() == 1 && d_kernel.rows == 1 &&
            d_input.type() == CV_32FC1 && d_kernel.type() == CV_32FC1);
 
@@ -186,7 +186,7 @@ void columnConvolution(const cv::gpu::GpuMat& d_input,
     const size_t kernelSize = d_kernel.cols;
     assert(kernelSize % 2 == 1);
 
-    d_dest = cv::gpu::createContinuous(rows, cols, d_input.type());
+    d_dest = cv::cuda::createContinuous(rows, cols, d_input.type());
 
     // Run convolution kernel
     dim3 blocks(cols, max(1, (unsigned int)ceil(float(rows) / float(THREADS_PER_BLOCK))));
@@ -212,7 +212,7 @@ void rowConvolution(const cv::Mat& input, const cv::Mat& kernel, cv::Mat& dest) 
            input.type() == CV_32FC1 && kernel.type() == CV_32FC1);
 
     // Copy to device
-    cv::gpu::GpuMat d_input, d_kernel, d_dest;
+    cv::cuda::GpuMat d_input, d_kernel, d_dest;
 
     // Separate thread since upload() is a blocking call
     std::thread copyInputThread([&d_input, &input]() { d_input.upload(input); });
@@ -233,7 +233,7 @@ void columnConvolution(const cv::Mat& input, const cv::Mat& kernel, cv::Mat& des
            input.type() == CV_32FC1 && kernel.type() == CV_32FC1);
 
     // Copy to device
-    cv::gpu::GpuMat d_input, d_kernel, d_dest;
+    cv::cuda::GpuMat d_input, d_kernel, d_dest;
 
     // Separate thread since upload() is a blocking call
     std::thread copyInputThread([&d_input, &input]() { d_input.upload(input); });
@@ -274,9 +274,9 @@ void separableConvolution(const cv::Mat& input,
     cv::transpose(colKernel, colKernelRow);
 
     // Copy to device
-    cv::gpu::GpuMat d_input, d_rowKernel, d_colKernel;
-    cv::gpu::GpuMat d_buffer = cv::gpu::createContinuous(rows, cols, input.type());
-    cv::gpu::GpuMat d_dest = cv::gpu::createContinuous(rows, cols, input.type());
+    cv::cuda::GpuMat d_input, d_rowKernel, d_colKernel;
+    cv::cuda::GpuMat d_buffer = cv::cuda::createContinuous(rows, cols, input.type());
+    cv::cuda::GpuMat d_dest = cv::cuda::createContinuous(rows, cols, input.type());
 
     // Separate thread since upload() is a blocking call
     std::thread copyInputThread([&d_input, &input]() { d_input.upload(input); });

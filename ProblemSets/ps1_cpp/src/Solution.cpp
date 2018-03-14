@@ -4,7 +4,9 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <opencv2/gpu/gpu.hpp>
+#include <opencv2/core/cuda.hpp>
+#include <opencv2/cudafilters.hpp>
+#include <opencv2/cudaimgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
@@ -89,24 +91,31 @@ bool Solution::makeDir(const std::string& dirPath) {
 
 // Run on GPU
 void Solution::generateEdge(const cv::Mat& input, const EdgeDetectConfig& config, cv::Mat& output) {
-    cv::gpu::GpuMat d_input(input);
-    cv::gpu::GpuMat d_blurred, d_output;
+    cv::cuda::GpuMat d_input(input);
+    cv::cuda::GpuMat d_blurredFlt(input.size(), input.type());
 
     // Run Gaussian blur
-    cv::gpu::GaussianBlur(d_input,
-                          d_blurred,
-                          cv::Size(config._gaussianSize, config._gaussianSize),
-                          config._gaussianSigma);
+    cv::Ptr<cv::cuda::Filter> gaussian =
+        cv::cuda::createGaussianFilter(d_input.type(),
+                                       d_blurredFlt.type(),
+                                       cv::Size(config._gaussianSize, config._gaussianSize),
+                                       config._gaussianSigma);
+
+    gaussian->apply(d_input, d_blurredFlt);
+
     // Compute edges
     // First convert to uchar8 matrix
-    d_blurred.convertTo(d_blurred, CV_8UC1);
-    cv::gpu::Canny(d_blurred,
-                   d_output,
-                   config._lowerThreshold,
-                   config._upperThreshold,
-                   config._sobelApertureSize);
+    cv::cuda::GpuMat d_blurred(input.size(), CV_8UC1);
+    d_blurredFlt.convertTo(d_blurred, CV_8UC1);
+    cv::Ptr<cv::cuda::CannyEdgeDetector> canny = cv::cuda::createCannyEdgeDetector(
+        config._lowerThreshold, config._upperThreshold, config._sobelApertureSize);
+
+    cv::cuda::GpuMat d_output(input.size(), CV_8UC1);
+    canny->detect(d_blurred, d_output);
+
     // Copy result back to output
     d_output.download(output);
+    // d_blurred.download(output);
 }
 
 void Solution::gpuGaussian(const cv::Mat& input, const EdgeDetectConfig& config, cv::Mat& output) {

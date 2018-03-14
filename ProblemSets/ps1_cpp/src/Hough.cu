@@ -5,7 +5,7 @@
 #include <thrust/functional.h>
 #include <thrust/remove.h>
 #include <thrust/sort.h>
-#include <opencv2/core/cuda_devptrs.hpp>
+#include <opencv2/core/cuda_types.hpp>
 
 #include <iostream>
 #include <thread>
@@ -28,11 +28,11 @@ __host__ __device__ inline float degToRad(float theta) {
  * \param thetaBinSize size of theta bins
  * \param histo output matrix of histogram values
  */
-__global__ void houghAccumulateKernel(const cv::gpu::PtrStepSz<unsigned char> edgeMask,
+__global__ void houghAccumulateKernel(const cv::cuda::PtrStepSz<unsigned char> edgeMask,
                                       const size_t diagDist,
                                       const size_t rhoBinSize,
                                       const size_t thetaBinSize,
-                                      cv::gpu::PtrStepSz<int> histo) {
+                                      cv::cuda::PtrStepSz<int> histo) {
     const uint2 threadPos = getPosition();
 
     // Return if we're outside the bounds of the image, or if this is not a masked point
@@ -89,7 +89,7 @@ struct HoughPoint2D {
  * \param localMaximaPoints Binary mask of local maxima, where 1 is marked as being a local maxima
  * and 0 is not
  */
-__global__ void findLocalMaximaKernel(const cv::gpu::PtrStepSz<int> accumulator,
+__global__ void findLocalMaximaKernel(const cv::cuda::PtrStepSz<int> accumulator,
                                       HoughPoint2D* localMaximaPoints) {
     const uint2 threadPos = getPosition();
 
@@ -133,10 +133,10 @@ struct MaskAndThreshold {
     }
 };
 
-void cuda::houghAccumulate(const cv::gpu::GpuMat& edgeMask,
+void cuda::houghAccumulate(const cv::cuda::GpuMat& edgeMask,
                            const size_t rhoBinSize,
                            const size_t thetaBinSize,
-                           cv::gpu::GpuMat& accumulator) {
+                           cv::cuda::GpuMat& accumulator) {
     assert(edgeMask.type() == CV_8UC1);
     static constexpr size_t TILE_SIZE = 16;
 
@@ -154,7 +154,7 @@ void cuda::houghAccumulate(const cv::gpu::GpuMat& edgeMask,
                 max(1, (unsigned int)ceil(float(edgeMask.rows) / float(TILE_SIZE))));
     dim3 threads(TILE_SIZE, TILE_SIZE);
 
-    // Launch kernel. cv::gpu::GpuMat types are convertable to cv::gpu::PtrStepSz wrapper types
+    // Launch kernel. cv::cuda::GpuMat types are convertable to cv::cuda::PtrStepSz wrapper types
     houghAccumulateKernel<<<blocks, threads>>>(
         edgeMask, maxDist, rhoBinSize, thetaBinSize, accumulator);
     cudaDeviceSynchronize();
@@ -166,7 +166,7 @@ void cuda::houghAccumulate(const cv::Mat& edgeMask,
                            const size_t thetaBinSize,
                            cv::Mat& accumulator) {
     assert(edgeMask.type() == CV_8UC1);
-    cv::gpu::GpuMat d_edgeMask, d_accumulator;
+    cv::cuda::GpuMat d_edgeMask, d_accumulator;
 
     // Copy input to GPU
     d_edgeMask.upload(edgeMask);
@@ -178,7 +178,7 @@ void cuda::houghAccumulate(const cv::Mat& edgeMask,
     d_accumulator.download(accumulator);
 }
 
-void cuda::findLocalMaxima(const cv::gpu::GpuMat& accumulator,
+void cuda::findLocalMaxima(const cv::cuda::GpuMat& accumulator,
                            const size_t numPeaks,
                            const int threshold,
                            std::vector<std::pair<unsigned int, unsigned int>>& localMaxima) {
@@ -221,7 +221,7 @@ void cuda::findLocalMaxima(const cv::Mat& accumulator,
                            const size_t numPeaks,
                            const int threshold,
                            std::vector<std::pair<unsigned int, unsigned int>>& localMaxima) {
-    cv::gpu::GpuMat d_accumulator, d_localMaximaMask;
+    cv::cuda::GpuMat d_accumulator, d_localMaximaMask;
 
     // Copy to GPU
     d_accumulator.upload(accumulator);

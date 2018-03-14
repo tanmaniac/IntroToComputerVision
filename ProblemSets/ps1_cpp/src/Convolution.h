@@ -7,13 +7,13 @@ void rowConvolution(const cv::Mat& input, const cv::Mat& kernel, cv::Mat& dest);
 
 void columnConvolution(const cv::Mat& input, const cv::Mat& kernel, cv::Mat& dest);
 
-void rowConvolution(const cv::gpu::GpuMat& d_input,
-                    const cv::gpu::GpuMat& d_kernel,
-                    cv::gpu::GpuMat& d_dest);
+void rowConvolution(const cv::cuda::GpuMat& d_input,
+                    const cv::cuda::GpuMat& d_kernel,
+                    cv::cuda::GpuMat& d_dest);
 
-void columnConvolution(const cv::gpu::GpuMat& d_input,
-                       const cv::gpu::GpuMat& d_kernel,
-                       cv::gpu::GpuMat& d_dest);
+void columnConvolution(const cv::cuda::GpuMat& d_input,
+                       const cv::cuda::GpuMat& d_kernel,
+                       cv::cuda::GpuMat& d_dest);
 
 // Convolve will do both row and column convolution steps together, so there doesn't need to be
 // a buffer between each step. Params:
