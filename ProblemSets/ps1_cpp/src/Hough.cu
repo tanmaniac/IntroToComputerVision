@@ -146,8 +146,8 @@ void cuda::houghAccumulate(const cv::cuda::GpuMat& edgeMask,
     const size_t thetaBins =
         (max(size_t(1), size_t(ceil(float(THETA_WIDTH) / float(thetaBinSize)))));
     accumulator.create(rhoBins, thetaBins, CV_32SC1);
-    std::cout << "accumulator size = " << accumulator.rows << " x " << accumulator.cols
-              << std::endl;
+    //std::cout << "accumulator size = " << accumulator.rows << " x " << accumulator.cols
+    //          << std::endl;
 
     // Determine block and grid size
     dim3 blocks(max(1, (unsigned int)ceil(float(edgeMask.cols) / float(TILE_SIZE))),
@@ -170,7 +170,7 @@ void cuda::houghAccumulate(const cv::Mat& edgeMask,
 
     // Copy input to GPU
     d_edgeMask.upload(edgeMask);
-    std::cout << "d_edgemask size = " << d_edgeMask.rows << " x " << d_edgeMask.cols << std::endl;
+    // std::cout << "d_edgemask size = " << d_edgeMask.rows << " x " << d_edgeMask.cols << std::endl;
 
     houghAccumulate(d_edgeMask, rhoBinSize, thetaBinSize, d_accumulator);
 

@@ -15,7 +15,8 @@
 
 static constexpr float PI = 3.14159265;
 
-// Run on GPU
+// Finds edges using a Canny edge detector.
+// TODO: Don't do gaussian blurring within this function, just expect a pre-blurred image @tanmaniac
 void sol::generateEdge(const cv::Mat& input, const Config::EdgeDetect& config, cv::Mat& output) {
     cv::cuda::GpuMat d_input(input);
     cv::cuda::GpuMat d_blurredFlt(input.size(), input.type());
@@ -45,12 +46,23 @@ void sol::generateEdge(const cv::Mat& input, const Config::EdgeDetect& config, c
 }
 
 void sol::gpuGaussian(const cv::Mat& input, const Config::EdgeDetect& config, cv::Mat& output) {
-    cv::Mat colGaussian =
+    /*cv::Mat colGaussian =
         cv::getGaussianKernel(config._gaussianSize, config._gaussianSigma, CV_32F);
     cv::Mat rowGaussian;
     cv::transpose(colGaussian, rowGaussian);
     // Running CUDA convolution
-    separableConvolution(input, rowGaussian, colGaussian, output);
+    separableConvolution(input, rowGaussian, colGaussian, output);*/
+    cv::cuda::GpuMat d_input(input);
+    cv::cuda::GpuMat d_blurred(input.size(), input.type());
+    cv::Ptr<cv::cuda::Filter> gaussian =
+        cv::cuda::createGaussianFilter(d_input.type(),
+                                       d_blurred.type(),
+                                       cv::Size(config._gaussianSize, config._gaussianSize),
+                                       config._gaussianSigma);
+    gaussian->apply(d_input, d_blurred);
+
+    // Copy back to output
+    d_blurred.download(output);
 }
 
 // Serial implementation of Hough transform accumulation
@@ -121,5 +133,29 @@ void sol::drawLineParametric(cv::Mat& image,
         start.x = end.x = rho / cos(thetaRad);
     }
 
-    cv::line(image, start, end, color, 2);
+    cv::line(image, start, end, color, 1);
+}
+
+// OpenCV comparison functions
+void sol::cvHoughLines(const cv::Mat& img,
+                       const Config::Hough& config,
+                       std::vector<std::pair<float, float>>& lines) {
+    cv::cuda::GpuMat d_img(img);
+    float rhoRes = config._rhoBinSize;
+    float thetaRes = float(config._thetaBinSize) * PI / 180.f;
+    cv::Ptr<cv::cuda::HoughLinesDetector> hld = cv::cuda::createHoughLinesDetector(
+        rhoRes, thetaRes, config._threshold, true, config._numPeaks);
+
+    cv::cuda::GpuMat d_lines;
+    hld->detect(d_img, d_lines);
+    cv::Mat h_lines;
+    hld->downloadResults(d_lines, h_lines);
+
+    std::cout << "h_lines = " << std::endl << "    " << h_lines << std::endl;
+    std::cout << "rows = " << h_lines.rows << " cols = " << h_lines.cols << std::endl;
+
+    for (int i = 0; i < h_lines.cols * 2; i += 2) {
+        lines.push_back(
+            std::make_pair(h_lines.at<float>(i), h_lines.at<float>(i + 1) * 180.f / PI));
+    }
 }

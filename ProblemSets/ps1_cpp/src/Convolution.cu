@@ -158,8 +158,8 @@ void rowConvolution(const cv::cuda::GpuMat& d_input,
     // Run convolution kernel
     dim3 blocks(max(1, (unsigned int)ceil(float(cols) / float(THREADS_PER_BLOCK))), rows);
     dim3 threads(THREADS_PER_BLOCK);
-    std::cout << "blocks = " << blocks.x << ", " << blocks.y << std::endl;
-    std::cout << "threads = " << threads.x << ", " << threads.y << std::endl;
+    //std::cout << "blocks = " << blocks.x << ", " << blocks.y << std::endl;
+    //std::cout << "threads = " << threads.x << ", " << threads.y << std::endl;
 
     const size_t shmSize = (THREADS_PER_BLOCK + 2 * kernelSize) * sizeof(float);
 
@@ -191,8 +191,8 @@ void columnConvolution(const cv::cuda::GpuMat& d_input,
     // Run convolution kernel
     dim3 blocks(cols, max(1, (unsigned int)ceil(float(rows) / float(THREADS_PER_BLOCK))));
     dim3 threads(1, THREADS_PER_BLOCK);
-    std::cout << "blocks = " << blocks.x << ", " << blocks.y << std::endl;
-    std::cout << "threads = " << threads.x << ", " << threads.y << std::endl;
+    //std::cout << "blocks = " << blocks.x << ", " << blocks.y << std::endl;
+    //std::cout << "threads = " << threads.x << ", " << threads.y << std::endl;
 
     const size_t shmSize = (THREADS_PER_BLOCK + 2 * kernelSize) * sizeof(float);
 
@@ -261,7 +261,6 @@ void separableConvolution(const cv::Mat& input,
                           cv::Mat& dest) {
     assert(input.channels() == 1 && rowKernel.channels() == 1 && colKernel.channels() == 1);
 
-    static constexpr size_t THREADS_PER_BLOCK = 256;
     const size_t rows = input.rows;
     const size_t cols = input.cols;
     const size_t rowKernelSize = rowKernel.cols;

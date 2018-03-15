@@ -58,22 +58,8 @@ std::pair<int, int> rowColToRhoTheta(const std::pair<unsigned int, unsigned int>
                                      const Config::Hough& config);
 void drawLineParametric(cv::Mat& image, const float rho, const float theta, const cv::Scalar color);
 
-/**
- * Problem 3
- * Use ps1-input0-noise.png - same image as before, but with noise. Compute a modestly smoothed
- * version of this image by using a Gaussian filter. Make σ at least a few pixels big.
- * Output:
- * Smoothed image: ps1-3-a-1.png
- *
- * Using an edge operator of your choosing, create a binary edge image for both the original
- * image (ps1-input0-noise.png) and the smoothed version above. Output: Two edge images:
- *  ps1-3-b-1.png (from original), ps1-3-b-2.png (from smoothed)
- *
- * Now apply your Hough method to the smoothed version of the edge image. Your goal is to adjust
- * the filtering, edge finding, and Hough algorithms to find the lines as best you can in this
- * test case.
- * Output:
- *  - Hough accumulator array image with peaks highlighted: ps1-3-c-1.png
- *  - Intensity image (original one with the noise) with lines drawn on them: ps1-3-c-2.png
- */
+// OpenCV comparison functions
+void cvHoughLines(const cv::Mat& img,
+                  const Config::Hough& config,
+                  std::vector<std::pair<float, float>>& lines);
 }; // namespace sol

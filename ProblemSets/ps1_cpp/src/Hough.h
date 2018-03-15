@@ -3,8 +3,8 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/cuda.hpp>
 
-#define MIN_THETA -90
-#define MAX_THETA 90
+#define MIN_THETA 0.f
+#define MAX_THETA 180.f
 #define THETA_WIDTH (MAX_THETA - MIN_THETA)
 
 // C++ wrappers around CUDA kernels

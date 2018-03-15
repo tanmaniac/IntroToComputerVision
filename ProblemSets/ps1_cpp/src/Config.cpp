@@ -35,7 +35,7 @@ Config::Images::Images(const YAML::Node& imagesNode) {
     loadSuccess = loadImgFromYAML(imagesNode, "input0_noise", _input0NoisePath, _input0Noise);
     _input0Noise.convertTo(_input0Noise, CV_32FC1);
     loadSuccess = loadImgFromYAML(imagesNode, "input1", _input1Path, _input1);
-    loadSuccess = loadImgFromYAML(imagesNode, "input2", _input1Path, _input1);
+    loadSuccess = loadImgFromYAML(imagesNode, "input2", _input2Path, _input2);
     loadSuccess = loadImgFromYAML(imagesNode, "input3", _input3Path, _input3);
 
     _configDone = loadSuccess;
@@ -74,6 +74,7 @@ Config::Config(const std::string& configFilePath) {
         std::cout << "Loaded runtime configuration from " << configFilePath << std::endl;
     } else {
         std::cerr << "Configuration load failed!" << std::endl;
+        exit(-1);
     }
 }
 
@@ -115,6 +116,14 @@ bool Config::loadConfig(const YAML::Node& config) {
         _p3Hough = Hough(houghNode);
     }
 
+    if (YAML::Node edgeDetectNode = config["edge_detector_p4"]) {
+        _p4Edge = EdgeDetect(edgeDetectNode);
+    }
+
+    if (YAML::Node houghNode = config["hough_transform_p4"]) {
+        _p4Hough = Hough(houghNode);
+    }
+
     bool configSuccess = true;
     // Verify that configurations were successful
     if (!_images.configDone()) {
@@ -135,6 +144,14 @@ bool Config::loadConfig(const YAML::Node& config) {
     }
     if (!_p3Hough.configDone()) {
         std::cerr << "Loading Hough transform parameters for Problem 3 failed!" << std::endl;
+        configSuccess = false;
+    }
+    if (!_p4Edge.configDone()) {
+        std::cerr << "Loading edge detection parameters for Problem 4 failed!" << std::endl;
+        configSuccess = false;
+    }
+    if (!_p4Hough.configDone()) {
+        std::cerr << "Loading Hough transform parameters for Problem 4 failed!" << std::endl;
         configSuccess = false;
     }
 

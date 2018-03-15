@@ -63,8 +63,8 @@ public:
     };
 
     Images _images;
-    EdgeDetect _p2Edge, _p3Edge;
-    Hough _p2Hough, _p3Hough;
+    EdgeDetect _p2Edge, _p3Edge, _p4Edge;
+    Hough _p2Hough, _p3Hough, _p4Hough;
 
     std::string _outputPathPrefix;
 

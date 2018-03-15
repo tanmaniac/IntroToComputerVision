@@ -18,22 +18,36 @@ edge_detector_p2:
   sobel_aperture_size: 3
 
 hough_transform_p2:
-  rho_bin_size: 2
-  theta_bin_size: 2
+  rho_bin_size: 1
+  theta_bin_size: 1
   num_peaks: 6
   threshold: 200
 
 # Problem 3 configuration
 edge_detector_p3:
-  gaussian_size: 23
-  gaussian_sigma: 6
-  lower_threshold: 7
-  upper_threshold: 10
-  sobel_aperture_size: 7
+  gaussian_size: 19
+  gaussian_sigma: 4
+  lower_threshold: 10
+  upper_threshold: 50
+  sobel_aperture_size: 3
 
 hough_transform_p3:
-  rho_bin_size: 2
-  theta_bin_size: 2
+  rho_bin_size: 1
+  theta_bin_size: 1
   num_peaks: 6
   threshold: 10
+
+# Problem 4 configuration
+edge_detector_p4:
+  gaussian_size: 13
+  gaussian_sigma: 4
+  lower_threshold: 20
+  upper_threshold: 80
+  sobel_aperture_size: 3
+
+hough_transform_p4:
+  rho_bin_size: 1
+  theta_bin_size: 3
+  num_peaks: 10
+  threshold: 40
 ...
