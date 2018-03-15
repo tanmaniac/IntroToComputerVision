@@ -45,7 +45,7 @@ void sol::generateEdge(const cv::Mat& input, const Config::EdgeDetect& config, c
     // d_blurred.download(output);
 }
 
-void sol::gpuGaussian(const cv::Mat& input, const Config::EdgeDetect& config, cv::Mat& output) {
+void sol::gaussianBlur(const cv::Mat& input, const Config::EdgeDetect& config, cv::Mat& output) {
     /*cv::Mat colGaussian =
         cv::getGaussianKernel(config._gaussianSize, config._gaussianSigma, CV_32F);
     cv::Mat rowGaussian;
@@ -65,33 +65,10 @@ void sol::gpuGaussian(const cv::Mat& input, const Config::EdgeDetect& config, cv
     d_blurred.download(output);
 }
 
-// Serial implementation of Hough transform accumulation
-void sol::serialHoughLinesAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulator) {
-    size_t maxDist = ceil(cv::sqrt(edgeMask.rows * edgeMask.rows + edgeMask.cols * edgeMask.cols));
-    std::cout << "MaxDist = " << maxDist << std::endl;
-
-    accumulator = cv::Mat(2 * maxDist, THETA_WIDTH, CV_32SC1);
-    accumulator = cv::Scalar(0);
-
-    // Iterate over the mask
-    for (unsigned int y = 0; y < edgeMask.rows; y++) {
-        for (unsigned int x = 0; x < edgeMask.cols; x++) {
-            if (edgeMask.at<unsigned char>(y, x, 0) != 0) {
-                // Vote in Hough accumulator
-                for (int theta = MIN_THETA; theta < MAX_THETA; theta++) {
-                    double thetaRad = theta * PI / 180.0;
-                    unsigned int rho = round(x * cos(thetaRad) + y * sin(thetaRad)) + maxDist;
-                    accumulator.at<int>(rho, theta - MIN_THETA, 0) += 1;
-                }
-            }
-        }
-    }
-}
-
 void sol::houghLinesAccumulate(const cv::Mat& edgeMask,
                                const Config::Hough& config,
                                cv::Mat& accumulator) {
-    cuda::houghAccumulate(edgeMask, config._rhoBinSize, config._thetaBinSize, accumulator);
+    cuda::houghLinesAccumulate(edgeMask, config._rhoBinSize, config._thetaBinSize, accumulator);
 }
 
 void sol::findLocalMaxima(const cv::Mat& accumulator,

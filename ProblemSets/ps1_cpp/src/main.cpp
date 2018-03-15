@@ -53,7 +53,7 @@ void runProb1Prob2(Config& config) {
 void runProblem3(Config& config) {
     // Compute a blurred version of the noisy input image
     cv::Mat gaussFromNoisy;
-    sol::gpuGaussian(config._images._input0Noise, config._p3Edge, gaussFromNoisy);
+    sol::gaussianBlur(config._images._input0Noise, config._p3Edge, gaussFromNoisy);
     cv::imwrite(config._outputPathPrefix + "/ps1-3-a-1.png", gaussFromNoisy);
 
     // Find edges in the noisy input image using a Canny edge detector
@@ -96,7 +96,7 @@ void runProblem4(const Config& config) {
 
     // Blur the input image
     cv::Mat blurred;
-    sol::gpuGaussian(input1Mono, config._p4Edge, blurred);
+    sol::gaussianBlur(input1Mono, config._p4Edge, blurred);
     cv::imwrite(config._outputPathPrefix + "/ps1-4-a-1.png", blurred);
 
     // Find edges in the input image

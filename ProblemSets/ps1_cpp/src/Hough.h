@@ -10,15 +10,15 @@
 // C++ wrappers around CUDA kernels
 
 namespace cuda {
-void houghAccumulate(const cv::cuda::GpuMat& edgeMask,
-                     const float rhoBinSize,
-                     const float thetaBinSize,
-                     cv::cuda::GpuMat& accumulator);
+void houghLinesAccumulate(const cv::cuda::GpuMat& edgeMask,
+                          const float rhoBinSize,
+                          const float thetaBinSize,
+                          cv::cuda::GpuMat& accumulator);
 
-void houghAccumulate(const cv::Mat& edgeMask,
-                     const float rhoBinSize,
-                     const float thetaBinSize,
-                     cv::Mat& accumulator);
+void houghLinesAccumulate(const cv::Mat& edgeMask,
+                          const float rhoBinSize,
+                          const float thetaBinSize,
+                          cv::Mat& accumulator);
 
 /**
  * \brief Locates peaks in the Hough transform matrix.

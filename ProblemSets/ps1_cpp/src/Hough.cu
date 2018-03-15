@@ -28,11 +28,11 @@ __host__ __device__ inline float degToRad(float theta) {
  * \param thetaBinSize size of theta bins
  * \param histo output matrix of histogram values
  */
-__global__ void houghAccumulateKernel(const cv::cuda::PtrStepSz<unsigned char> edgeMask,
-                                      const size_t diagDist,
-                                      const float rhoBinSize,
-                                      const float thetaBinSize,
-                                      cv::cuda::PtrStepSz<int> histo) {
+__global__ void houghLinesAccumulateKernel(const cv::cuda::PtrStepSz<unsigned char> edgeMask,
+                                           const size_t diagDist,
+                                           const float rhoBinSize,
+                                           const float thetaBinSize,
+                                           cv::cuda::PtrStepSz<int> histo) {
     const uint2 threadPos = getPosition();
 
     // Return if we're outside the bounds of the image, or if this is not a masked point
@@ -61,8 +61,7 @@ struct HoughPoint2D {
     __host__ __device__ HoughPoint2D(int votes, float rho, float theta)
         : _votes(votes), _rho(rho), _theta(theta) {}
 
-    __host__ __device__
-        HoughPoint2D(int votes, float rho, float theta, bool isLocalMaxima)
+    __host__ __device__ HoughPoint2D(int votes, float rho, float theta, bool isLocalMaxima)
         : _votes(votes), _rho(rho), _theta(theta), _isLocalMaxima(isLocalMaxima) {}
 
     __host__ __device__ friend bool operator<(const HoughPoint2D& lhs, const HoughPoint2D& rhs) {
@@ -133,7 +132,7 @@ struct MaskAndThreshold {
     }
 };
 
-void cuda::houghAccumulate(const cv::cuda::GpuMat& edgeMask,
+void cuda::houghLinesAccumulate(const cv::cuda::GpuMat& edgeMask,
                            const float rhoBinSize,
                            const float thetaBinSize,
                            cv::cuda::GpuMat& accumulator) {
@@ -146,7 +145,7 @@ void cuda::houghAccumulate(const cv::cuda::GpuMat& edgeMask,
     const size_t thetaBins =
         (max(size_t(1), size_t(ceil(float(THETA_WIDTH) / float(thetaBinSize)))));
     accumulator.create(rhoBins, thetaBins, CV_32SC1);
-    //std::cout << "accumulator size = " << accumulator.rows << " x " << accumulator.cols
+    // std::cout << "accumulator size = " << accumulator.rows << " x " << accumulator.cols
     //          << std::endl;
 
     // Determine block and grid size
@@ -155,13 +154,13 @@ void cuda::houghAccumulate(const cv::cuda::GpuMat& edgeMask,
     dim3 threads(TILE_SIZE, TILE_SIZE);
 
     // Launch kernel. cv::cuda::GpuMat types are convertable to cv::cuda::PtrStepSz wrapper types
-    houghAccumulateKernel<<<blocks, threads>>>(
+    houghLinesAccumulateKernel<<<blocks, threads>>>(
         edgeMask, maxDist, rhoBinSize, thetaBinSize, accumulator);
     cudaDeviceSynchronize();
     checkCudaErrors(cudaGetLastError());
 }
 
-void cuda::houghAccumulate(const cv::Mat& edgeMask,
+void cuda::houghLinesAccumulate(const cv::Mat& edgeMask,
                            const float rhoBinSize,
                            const float thetaBinSize,
                            cv::Mat& accumulator) {
@@ -170,9 +169,10 @@ void cuda::houghAccumulate(const cv::Mat& edgeMask,
 
     // Copy input to GPU
     d_edgeMask.upload(edgeMask);
-    // std::cout << "d_edgemask size = " << d_edgeMask.rows << " x " << d_edgeMask.cols << std::endl;
+    // std::cout << "d_edgemask size = " << d_edgeMask.rows << " x " << d_edgeMask.cols <<
+    // std::endl;
 
-    houghAccumulate(d_edgeMask, rhoBinSize, thetaBinSize, d_accumulator);
+    houghLinesAccumulate(d_edgeMask, rhoBinSize, thetaBinSize, d_accumulator);
 
     // Copy result back to CPU
     d_accumulator.download(accumulator);

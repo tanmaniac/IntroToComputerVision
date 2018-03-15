@@ -18,13 +18,12 @@ namespace sol {
  */
 void generateEdge(const cv::Mat& input, const Config::EdgeDetect& config, cv::Mat& output);
 // Using my separable convolution implementation
-void gpuGaussian(const cv::Mat& input, const Config::EdgeDetect& config, cv::Mat& output);
+void gaussianBlur(const cv::Mat& input, const Config::EdgeDetect& config, cv::Mat& output);
 
 /**
  * Problem 2.a.
  *  Computes the Hough Transform for lines and produces an accumulator array.
  */
-void serialHoughLinesAccumulate(const cv::Mat& edgeMask, cv::Mat& accumulator);
 void houghLinesAccumulate(const cv::Mat& edgeMask,
                           const Config::Hough& config,
                           cv::Mat& accumulator);
