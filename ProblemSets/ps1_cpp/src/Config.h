@@ -55,7 +55,7 @@ public:
     };
 
     struct Hough : BasicConfig {
-        size_t _rhoBinSize, _thetaBinSize, _numPeaks;
+        float _rhoBinSize, _thetaBinSize, _numPeaks;
         int _threshold;
 
         Hough() = default;

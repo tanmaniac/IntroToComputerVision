@@ -135,27 +135,3 @@ void sol::drawLineParametric(cv::Mat& image,
 
     cv::line(image, start, end, color, 1);
 }
-
-// OpenCV comparison functions
-void sol::cvHoughLines(const cv::Mat& img,
-                       const Config::Hough& config,
-                       std::vector<std::pair<float, float>>& lines) {
-    cv::cuda::GpuMat d_img(img);
-    float rhoRes = config._rhoBinSize;
-    float thetaRes = float(config._thetaBinSize) * PI / 180.f;
-    cv::Ptr<cv::cuda::HoughLinesDetector> hld = cv::cuda::createHoughLinesDetector(
-        rhoRes, thetaRes, config._threshold, true, config._numPeaks);
-
-    cv::cuda::GpuMat d_lines;
-    hld->detect(d_img, d_lines);
-    cv::Mat h_lines;
-    hld->downloadResults(d_lines, h_lines);
-
-    std::cout << "h_lines = " << std::endl << "    " << h_lines << std::endl;
-    std::cout << "rows = " << h_lines.rows << " cols = " << h_lines.cols << std::endl;
-
-    for (int i = 0; i < h_lines.cols * 2; i += 2) {
-        lines.push_back(
-            std::make_pair(h_lines.at<float>(i), h_lines.at<float>(i + 1) * 180.f / PI));
-    }
-}

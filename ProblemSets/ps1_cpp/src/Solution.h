@@ -57,9 +57,4 @@ std::pair<int, int> rowColToRhoTheta(const std::pair<unsigned int, unsigned int>
                                      const cv::Mat& inputImage,
                                      const Config::Hough& config);
 void drawLineParametric(cv::Mat& image, const float rho, const float theta, const cv::Scalar color);
-
-// OpenCV comparison functions
-void cvHoughLines(const cv::Mat& img,
-                  const Config::Hough& config,
-                  std::vector<std::pair<float, float>>& lines);
 }; // namespace sol

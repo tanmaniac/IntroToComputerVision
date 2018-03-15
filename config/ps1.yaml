@@ -4,6 +4,7 @@ images:
   input0: ../Resources/ProblemSet1/ps1-input0.png
   input0_noise: ../Resources/ProblemSet1/ps1-input0-noise.png
   input1: ../Resources/ProblemSet1/ps1-input1.png
+  #input1: ../Resources/ProblemSet1/Pentagon.png
   input2: ../Resources/ProblemSet1/ps1-input2.png
   input3: ../Resources/ProblemSet1/ps1-input3.png
 output_dir: ./ps1_output
@@ -32,10 +33,10 @@ edge_detector_p3:
   sobel_aperture_size: 3
 
 hough_transform_p3:
-  rho_bin_size: 1
-  theta_bin_size: 1
+  rho_bin_size: 2
+  theta_bin_size: 2
   num_peaks: 6
-  threshold: 10
+  threshold: 5
 
 # Problem 4 configuration
 edge_detector_p4:
@@ -47,7 +48,7 @@ edge_detector_p4:
 
 hough_transform_p4:
   rho_bin_size: 1
-  theta_bin_size: 3
+  theta_bin_size: 1
   num_peaks: 10
-  threshold: 40
+  threshold: 130
 ...

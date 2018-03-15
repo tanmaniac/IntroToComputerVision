@@ -107,15 +107,11 @@ void runProblem4(const Config& config) {
     // Build accumulator matrix for Hough line transform
     cv::Mat accumulator;
     sol::houghLinesAccumulate(edges, config._p4Hough, accumulator);
-    cv::imwrite(config._outputPathPrefix + "/ps1-4-c-1.png", accumulator);
 
     // Find local maxima in accumulation matrix
     std::vector<std::pair<unsigned int, unsigned int>> localMaxima;
     sol::findLocalMaxima(accumulator, config._p4Hough, localMaxima);
-    std::cout << "Local maxima - (row, column)" << std::endl;
-    for (const auto& val : localMaxima) {
-        std::cout << "  (row = " << val.first << ", col = " << val.second << ")" << std::endl;
-    }
+    cv::imwrite(config._outputPathPrefix + "/ps1-4-c-1.png", accumulator);
 
     // Convert local maxima from (row, col) values to (rho, theta) values
     std::vector<std::pair<int, int>> rhoThetaVals;
@@ -133,19 +129,6 @@ void runProblem4(const Config& config) {
         sol::drawLineParametric(drawnLines, val.first, val.second, CV_RGB(0x00, 0xFF, 0x00));
     }
     cv::imwrite(config._outputPathPrefix + "/ps1-4-c-2.png", drawnLines);
-
-    // OpenCV version
-    std::vector<std::pair<float, float>> lines;
-    sol::cvHoughLines(edges, config._p4Hough, lines);
-    for (const auto& val : lines) {
-        std::cout << "  rho = " << val.first << ", theta = " << val.second << std::endl;
-    }
-    cv::Mat cvDrawnLines;
-    cv::cvtColor(input1Mono, cvDrawnLines, CV_GRAY2RGB);
-    for (const auto& val : lines) {
-        sol::drawLineParametric(cvDrawnLines, val.first, val.second, CV_RGB(0xFF, 0x00, 0x00));
-    }
-    cv::imwrite(config._outputPathPrefix + "/ref.png", cvDrawnLines);
 }
 
 int main() {

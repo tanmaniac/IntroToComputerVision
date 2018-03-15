@@ -30,21 +30,21 @@ __host__ __device__ inline float degToRad(float theta) {
  */
 __global__ void houghAccumulateKernel(const cv::cuda::PtrStepSz<unsigned char> edgeMask,
                                       const size_t diagDist,
-                                      const size_t rhoBinSize,
-                                      const size_t thetaBinSize,
+                                      const float rhoBinSize,
+                                      const float thetaBinSize,
                                       cv::cuda::PtrStepSz<int> histo) {
     const uint2 threadPos = getPosition();
 
     // Return if we're outside the bounds of the image, or if this is not a masked point
     if (threadPos.x >= edgeMask.cols || threadPos.y >= edgeMask.rows ||
-        edgeMask(threadPos.x, threadPos.y) == 0) {
+        edgeMask(threadPos.y, threadPos.x) == 0) {
         return;
     }
 
     // Iterate over all values of theta and sum up in histogram
     for (float theta = MIN_THETA; theta < MAX_THETA; theta += thetaBinSize) {
         float thetaRad = degToRad(theta);
-        int rho = roundf(threadPos.x * cosf(thetaRad) + threadPos.y * sinf(thetaRad)) + diagDist;
+        float rho = roundf(threadPos.x * cosf(thetaRad) + threadPos.y * sinf(thetaRad)) + diagDist;
         int rhoBin = roundf(rho / rhoBinSize);
         int thetaBin = roundf((theta - MIN_THETA) / thetaBinSize);
         atomicAdd(&histo(rhoBin, thetaBin), 1);
@@ -53,16 +53,16 @@ __global__ void houghAccumulateKernel(const cv::cuda::PtrStepSz<unsigned char> e
 
 struct HoughPoint2D {
     int _votes;
-    unsigned int _rho, _theta;
+    float _rho, _theta;
     bool _isLocalMaxima = false;
 
     __host__ __device__ HoughPoint2D() : _votes(0), _rho(0), _theta(0) {}
 
-    __host__ __device__ HoughPoint2D(int votes, unsigned int rho, unsigned int theta)
+    __host__ __device__ HoughPoint2D(int votes, float rho, float theta)
         : _votes(votes), _rho(rho), _theta(theta) {}
 
     __host__ __device__
-        HoughPoint2D(int votes, unsigned int rho, unsigned int theta, bool isLocalMaxima)
+        HoughPoint2D(int votes, float rho, float theta, bool isLocalMaxima)
         : _votes(votes), _rho(rho), _theta(theta), _isLocalMaxima(isLocalMaxima) {}
 
     __host__ __device__ friend bool operator<(const HoughPoint2D& lhs, const HoughPoint2D& rhs) {
@@ -134,8 +134,8 @@ struct MaskAndThreshold {
 };
 
 void cuda::houghAccumulate(const cv::cuda::GpuMat& edgeMask,
-                           const size_t rhoBinSize,
-                           const size_t thetaBinSize,
+                           const float rhoBinSize,
+                           const float thetaBinSize,
                            cv::cuda::GpuMat& accumulator) {
     assert(edgeMask.type() == CV_8UC1);
     static constexpr size_t TILE_SIZE = 16;
@@ -162,8 +162,8 @@ void cuda::houghAccumulate(const cv::cuda::GpuMat& edgeMask,
 }
 
 void cuda::houghAccumulate(const cv::Mat& edgeMask,
-                           const size_t rhoBinSize,
-                           const size_t thetaBinSize,
+                           const float rhoBinSize,
+                           const float thetaBinSize,
                            cv::Mat& accumulator) {
     assert(edgeMask.type() == CV_8UC1);
     cv::cuda::GpuMat d_edgeMask, d_accumulator;

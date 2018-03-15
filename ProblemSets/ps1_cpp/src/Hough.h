@@ -3,21 +3,21 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/cuda.hpp>
 
-#define MIN_THETA 0.f
-#define MAX_THETA 180.f
+#define MIN_THETA -90.f
+#define MAX_THETA 90.f
 #define THETA_WIDTH (MAX_THETA - MIN_THETA)
 
 // C++ wrappers around CUDA kernels
 
 namespace cuda {
 void houghAccumulate(const cv::cuda::GpuMat& edgeMask,
-                     const size_t rhoBinSize,
-                     const size_t thetaBinSize,
+                     const float rhoBinSize,
+                     const float thetaBinSize,
                      cv::cuda::GpuMat& accumulator);
 
 void houghAccumulate(const cv::Mat& edgeMask,
-                     const size_t rhoBinSize,
-                     const size_t thetaBinSize,
+                     const float rhoBinSize,
+                     const float thetaBinSize,
                      cv::Mat& accumulator);
 
 /**
