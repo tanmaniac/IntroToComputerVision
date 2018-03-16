@@ -11,13 +11,13 @@
 
 namespace cuda {
 void houghLinesAccumulate(const cv::cuda::GpuMat& edgeMask,
-                          const float rhoBinSize,
-                          const float thetaBinSize,
+                          const unsigned int rhoBinSize,
+                          const unsigned int thetaBinSize,
                           cv::cuda::GpuMat& accumulator);
 
 void houghLinesAccumulate(const cv::Mat& edgeMask,
-                          const float rhoBinSize,
-                          const float thetaBinSize,
+                          const unsigned int rhoBinSize,
+                          const unsigned int thetaBinSize,
                           cv::Mat& accumulator);
 
 /**
@@ -29,7 +29,7 @@ void houghLinesAccumulate(const cv::Mat& edgeMask,
  * the column in which the peak was found
  */
 void findLocalMaxima(const cv::cuda::GpuMat& accumulator,
-                     const size_t numPeaks,
+                     const unsigned int numPeaks,
                      const int threshold,
                      std::vector<std::pair<unsigned int, unsigned int>>& localMaxima);
 
@@ -42,7 +42,13 @@ void findLocalMaxima(const cv::cuda::GpuMat& accumulator,
  * the column in which the peak was found
  */
 void findLocalMaxima(const cv::Mat& accumulator,
-                     const size_t numPeaks,
+                     const unsigned int numPeaks,
                      const int threshold,
                      std::vector<std::pair<unsigned int, unsigned int>>& localMaxima);
+
+void houghCirclesAccumulate(const cv::cuda::GpuMat& edgeMask,
+                            const size_t radius,
+                            cv::cuda::GpuMat& accumulator);
+
+void houghCirclesAccumulate(const cv::Mat& edgeMask, const size_t radius, cv::Mat& accumulator);
 }; // namespace cuda

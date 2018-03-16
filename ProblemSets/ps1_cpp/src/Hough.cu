@@ -1,5 +1,8 @@
 #include <common/CudaCommon.cuh>
+#include <common/GpuTimer.h>
 #include "Hough.h"
+
+#include "spdlog/spdlog.h"
 
 #include <thrust/device_vector.h>
 #include <thrust/functional.h>
@@ -30,8 +33,8 @@ __host__ __device__ inline float degToRad(float theta) {
  */
 __global__ void houghLinesAccumulateKernel(const cv::cuda::PtrStepSz<unsigned char> edgeMask,
                                            const size_t diagDist,
-                                           const float rhoBinSize,
-                                           const float thetaBinSize,
+                                           const unsigned int rhoBinSize,
+                                           const unsigned int thetaBinSize,
                                            cv::cuda::PtrStepSz<int> histo) {
     const uint2 threadPos = getPosition();
 
@@ -41,13 +44,42 @@ __global__ void houghLinesAccumulateKernel(const cv::cuda::PtrStepSz<unsigned ch
         return;
     }
 
+    float cosTheta, sinTheta;
     // Iterate over all values of theta and sum up in histogram
-    for (float theta = MIN_THETA; theta < MAX_THETA; theta += thetaBinSize) {
+    for (int theta = MIN_THETA; theta < MAX_THETA; theta += thetaBinSize) {
         float thetaRad = degToRad(theta);
-        float rho = roundf(threadPos.x * cosf(thetaRad) + threadPos.y * sinf(thetaRad)) + diagDist;
+        __sincosf(thetaRad, &sinTheta, &cosTheta);
+        float rho = roundf(threadPos.x * cosTheta + threadPos.y * sinTheta) + diagDist;
         int rhoBin = roundf(rho / rhoBinSize);
         int thetaBin = roundf((theta - MIN_THETA) / thetaBinSize);
         atomicAdd(&histo(rhoBin, thetaBin), 1);
+    }
+}
+
+// Horrible global memory implementation
+__global__ void houghCirclesAccumulateKernel(const cv::cuda::PtrStepSz<unsigned char> edgeMask,
+                                             const size_t radius,
+                                             cv::cuda::PtrStepSz<int> histo) {
+    const uint2 threadPos = getPosition();
+
+    // Return if we're outside the bounds of the image, or if this is not a masked point
+    if (threadPos.x >= edgeMask.cols || threadPos.y >= edgeMask.rows ||
+        edgeMask(threadPos.y, threadPos.x) == 0) {
+        return;
+    }
+
+    unsigned int a, b;
+    float sinTheta, cosTheta;
+    // Generate circle
+    for (int theta = 0; theta < 360; theta++) {
+        __sincosf(degToRad(theta), &sinTheta, &cosTheta);
+        a = threadPos.x - radius * cosTheta;
+        b = threadPos.y - radius * sinTheta;
+
+        // Make sure we're within the bounds of the image
+        if (a < histo.cols && b < histo.rows) {
+            atomicAdd(&histo(b, a), 1);
+        }
     }
 }
 
@@ -87,6 +119,9 @@ struct HoughPoint2D {
  * \param accumulator Hough transform accumulator matrix, where y axis is rho and x axis is theta
  * \param localMaximaPoints Binary mask of local maxima, where 1 is marked as being a local maxima
  * and 0 is not
+ *
+ * TODO: Use Trove for higher-performance array-of-structures access
+ * https://github.com/bryancatanzaro/trove
  */
 __global__ void findLocalMaximaKernel(const cv::cuda::PtrStepSz<int> accumulator,
                                       HoughPoint2D* localMaximaPoints) {
@@ -133,9 +168,9 @@ struct MaskAndThreshold {
 };
 
 void cuda::houghLinesAccumulate(const cv::cuda::GpuMat& edgeMask,
-                           const float rhoBinSize,
-                           const float thetaBinSize,
-                           cv::cuda::GpuMat& accumulator) {
+                                const unsigned int rhoBinSize,
+                                const unsigned int thetaBinSize,
+                                cv::cuda::GpuMat& accumulator) {
     assert(edgeMask.type() == CV_8UC1);
     static constexpr size_t TILE_SIZE = 16;
 
@@ -145,32 +180,40 @@ void cuda::houghLinesAccumulate(const cv::cuda::GpuMat& edgeMask,
     const size_t thetaBins =
         (max(size_t(1), size_t(ceil(float(THETA_WIDTH) / float(thetaBinSize)))));
     accumulator.create(rhoBins, thetaBins, CV_32SC1);
-    // std::cout << "accumulator size = " << accumulator.rows << " x " << accumulator.cols
-    //          << std::endl;
+    // Logging
+    auto logger = spdlog::get("logger");
+    logger->info("Hough lines accumulator size = {}x{}", accumulator.rows, accumulator.cols);
 
     // Determine block and grid size
     dim3 blocks(max(1, (unsigned int)ceil(float(edgeMask.cols) / float(TILE_SIZE))),
                 max(1, (unsigned int)ceil(float(edgeMask.rows) / float(TILE_SIZE))));
     dim3 threads(TILE_SIZE, TILE_SIZE);
 
+    // Timing stuff
+    GpuTimer timer;
+    timer.start();
+
     // Launch kernel. cv::cuda::GpuMat types are convertable to cv::cuda::PtrStepSz wrapper types
     houghLinesAccumulateKernel<<<blocks, threads>>>(
         edgeMask, maxDist, rhoBinSize, thetaBinSize, accumulator);
+
+    timer.stop();
     cudaDeviceSynchronize();
     checkCudaErrors(cudaGetLastError());
+
+    // Log timing data
+    logger->info("houghLinesAccumulateKernel execution took {} ms", timer.getTime());
 }
 
 void cuda::houghLinesAccumulate(const cv::Mat& edgeMask,
-                           const float rhoBinSize,
-                           const float thetaBinSize,
-                           cv::Mat& accumulator) {
+                                const unsigned int rhoBinSize,
+                                const unsigned int thetaBinSize,
+                                cv::Mat& accumulator) {
     assert(edgeMask.type() == CV_8UC1);
     cv::cuda::GpuMat d_edgeMask, d_accumulator;
 
     // Copy input to GPU
     d_edgeMask.upload(edgeMask);
-    // std::cout << "d_edgemask size = " << d_edgeMask.rows << " x " << d_edgeMask.cols <<
-    // std::endl;
 
     houghLinesAccumulate(d_edgeMask, rhoBinSize, thetaBinSize, d_accumulator);
 
@@ -178,8 +221,56 @@ void cuda::houghLinesAccumulate(const cv::Mat& edgeMask,
     d_accumulator.download(accumulator);
 }
 
+void cuda::houghCirclesAccumulate(const cv::cuda::GpuMat& edgeMask,
+                                  const size_t radius,
+                                  cv::cuda::GpuMat& accumulator) {
+    assert(edgeMask.type() == CV_8UC1);
+    static constexpr size_t TILE_SIZE = 16;
+
+    // Allocate space for output
+    accumulator.create(edgeMask.rows, edgeMask.cols, CV_32SC1);
+
+    // Logging
+    auto logger = spdlog::get("logger");
+    logger->info("Hough circles accumulator size = {}x{}", accumulator.rows, accumulator.cols);
+
+    // Determine block size
+    dim3 blocks(max(1, (unsigned int)ceil(float(edgeMask.cols) / float(TILE_SIZE))),
+                max(1, (unsigned int)ceil(float(edgeMask.rows) / float(TILE_SIZE))));
+    dim3 threads(TILE_SIZE, TILE_SIZE);
+
+    // Timing stuff
+    GpuTimer timer;
+    timer.start();
+
+    // Launch circle accumulation kernel
+    houghCirclesAccumulateKernel<<<blocks, threads>>>(edgeMask, radius, accumulator);
+    
+    timer.stop();
+    cudaDeviceSynchronize();
+    checkCudaErrors(cudaGetLastError());
+
+    // Log timing data
+    logger->info("houghCirclesAccumulateKernel execution took {} ms", timer.getTime());
+}
+
+void cuda::houghCirclesAccumulate(const cv::Mat& edgeMask,
+                                  const size_t radius,
+                                  cv::Mat& accumulator) {
+    cv::cuda::GpuMat d_edgeMask, d_accumulator;
+
+    // Copy input matrix to GPU
+    d_edgeMask.upload(edgeMask);
+
+    // Run GpuMat implementation
+    houghCirclesAccumulate(d_edgeMask, radius, d_accumulator);
+
+    // Copy results back to CPU
+    d_accumulator.download(accumulator);
+}
+
 void cuda::findLocalMaxima(const cv::cuda::GpuMat& accumulator,
-                           const size_t numPeaks,
+                           const unsigned int numPeaks,
                            const int threshold,
                            std::vector<std::pair<unsigned int, unsigned int>>& localMaxima) {
     static constexpr size_t TILE_SIZE = 16;
@@ -191,15 +282,27 @@ void cuda::findLocalMaxima(const cv::cuda::GpuMat& accumulator,
                 max(1, (unsigned int)ceil(float(accumulator.rows) / float(TILE_SIZE))));
     dim3 threads(TILE_SIZE, TILE_SIZE);
 
+    // Timing stuff
+    auto logger = spdlog::get("logger");
+    GpuTimer timer;
+    timer.start();
+
     findLocalMaximaKernel<<<blocks, threads>>>(accumulator, localMaximaPoints.data().get());
+    
+    timer.stop();
     cudaDeviceSynchronize();
     checkCudaErrors(cudaGetLastError());
 
+    // Log timing data
+    logger->info("findLocalMaximaKernel execution took {} ms", timer.getTime());
+
     // Filter by threshold, where threshold is the minimum number of votes required to count as a
     // peak
-    // thrust::device_vector<HoughPoint2D>::iterator threshEnd = thrust::remove_if(
+    timer.start();
     auto threshEnd = thrust::remove_if(
         localMaximaPoints.begin(), localMaximaPoints.end(), MaskAndThreshold(threshold));
+    timer.stop();
+    logger->info("Filtering local maxima points took {} ms", timer.getTime());
 
     // Sort points by threshold values in descending order
     thrust::stable_sort(localMaximaPoints.begin(), threshEnd, thrust::greater<HoughPoint2D>());
@@ -218,7 +321,7 @@ void cuda::findLocalMaxima(const cv::cuda::GpuMat& accumulator,
 }
 
 void cuda::findLocalMaxima(const cv::Mat& accumulator,
-                           const size_t numPeaks,
+                           const unsigned int numPeaks,
                            const int threshold,
                            std::vector<std::pair<unsigned int, unsigned int>>& localMaxima) {
     cv::cuda::GpuMat d_accumulator, d_localMaximaMask;

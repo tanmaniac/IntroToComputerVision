@@ -63,17 +63,17 @@ Config::Hough::Hough(const YAML::Node& houghNode) {
 }
 
 Config::Config(const std::string& configFilePath) {
+    _logger = spdlog::get("logger");
     YAML::Node config = YAML::LoadFile(configFilePath);
     if (config.IsNull()) {
-        std::cerr << "Could not load input file (was looking for " << configFilePath << ")"
-                  << std::endl;
-        return;
+        _logger->error("Could not load input file (was looking for {})", configFilePath);
+        exit(-1);
     }
 
     if (loadConfig(config)) {
-        std::cout << "Loaded runtime configuration from " << configFilePath << std::endl;
+        _logger->info("Loaded runtime configuration from {}", configFilePath);
     } else {
-        std::cerr << "Configuration load failed!" << std::endl;
+        _logger->error("Configuration load failed!");
         exit(-1);
     }
 }
@@ -89,15 +89,14 @@ bool Config::loadConfig(const YAML::Node& config) {
     if (config["output_dir"]) {
         _outputPathPrefix = config["output_dir"].as<std::string>();
         if (makeDir(_outputPathPrefix)) {
-            std::cout << "Created output directory at \"" << _outputPathPrefix << "\"" << std::endl;
+            _logger->info("Created output directory at \"{}\"", _outputPathPrefix);
             madeOutputDir = true;
         }
     }
     if (!madeOutputDir) {
         _outputPathPrefix = "./";
-        std::cout << "No output path specified or could not make new directory; using current "
-                     "directory"
-                  << std::endl;
+        _logger->warn(
+            "No output path specified or could not make new directory; using current directory");
     }
 
     if (YAML::Node edgeDetectNode = config["edge_detector_p2"]) {
@@ -127,31 +126,31 @@ bool Config::loadConfig(const YAML::Node& config) {
     bool configSuccess = true;
     // Verify that configurations were successful
     if (!_images.configDone()) {
-        std::cerr << "Loading images failed!" << std::endl;
+        _logger->error("Loading images failed!");
         configSuccess = false;
     }
     if (!_p2Edge.configDone()) {
-        std::cerr << "Loading edge detection parameters for Problem 2 failed!" << std::endl;
+        _logger->error("Loading edge detection parameters for Problem 2 failed!");
         configSuccess = false;
     }
     if (!_p2Hough.configDone()) {
-        std::cerr << "Loading Hough transform parameters for Problem 2 failed!" << std::endl;
+        _logger->error("Loading Hough transform parameters for Problem 2 failed!");
         configSuccess = false;
     }
     if (!_p3Edge.configDone()) {
-        std::cerr << "Loading edge detection parameters for Problem 3 failed!" << std::endl;
+        _logger->error("Loading edge detection parameters for Problem 3 failed!");
         configSuccess = false;
     }
     if (!_p3Hough.configDone()) {
-        std::cerr << "Loading Hough transform parameters for Problem 3 failed!" << std::endl;
+        _logger->error("Loading Hough transform parameters for Problem 3 failed!");
         configSuccess = false;
     }
     if (!_p4Edge.configDone()) {
-        std::cerr << "Loading edge detection parameters for Problem 4 failed!" << std::endl;
+        _logger->error("Loading edge detection parameters for Problem 4 failed!");
         configSuccess = false;
     }
     if (!_p4Hough.configDone()) {
-        std::cerr << "Loading Hough transform parameters for Problem 4 failed!" << std::endl;
+        _logger->error("Loading Hough transform parameters for Problem 4 failed!");
         configSuccess = false;
     }
 

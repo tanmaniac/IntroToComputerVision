@@ -21,12 +21,13 @@ void generateEdge(const cv::Mat& input, const Config::EdgeDetect& config, cv::Ma
 void gaussianBlur(const cv::Mat& input, const Config::EdgeDetect& config, cv::Mat& output);
 
 /**
- * Problem 2.a.
- *  Computes the Hough Transform for lines and produces an accumulator array.
+ * Computes the Hough Transform for lines and produces an accumulator array.
  */
 void houghLinesAccumulate(const cv::Mat& edgeMask,
                           const Config::Hough& config,
                           cv::Mat& accumulator);
+
+void houghCirclesAccumulate(const cv::Mat& edgeMask, const size_t radius, cv::Mat& accumulator);
 
 /**
  * Problem 2.b.

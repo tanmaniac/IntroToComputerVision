@@ -71,6 +71,12 @@ void sol::houghLinesAccumulate(const cv::Mat& edgeMask,
     cuda::houghLinesAccumulate(edgeMask, config._rhoBinSize, config._thetaBinSize, accumulator);
 }
 
+void sol::houghCirclesAccumulate(const cv::Mat& edgeMask,
+                                 const size_t radius,
+                                 cv::Mat& accumulator) {
+    cuda::houghCirclesAccumulate(edgeMask, radius, accumulator);
+}
+
 void sol::findLocalMaxima(const cv::Mat& accumulator,
                           const Config::Hough& config,
                           std::vector<std::pair<unsigned int, unsigned int>>& localMaxima) {

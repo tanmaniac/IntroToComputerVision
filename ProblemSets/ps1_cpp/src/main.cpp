@@ -1,6 +1,8 @@
 #include "Config.h"
 #include "Solution.h"
 
+#include "spdlog/spdlog.h"
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -11,10 +13,13 @@
 // YAML file containing input parameters
 static constexpr char CONFIG_FILE_PATH[] = "../config/ps1.yaml";
 
+std::shared_ptr<spdlog::logger> _logger;
+
 /**
  * Executes problems 1 and 2.
  */
 void runProb1Prob2(Config& config) {
+    _logger->info("////////// Problem 1 & 2 output //////////");
     // Detect edges in the input image, which is just a checkerboard pattern
     cv::Mat detectedEdges;
     sol::generateEdge(config._images._input0, config._p2Edge, detectedEdges);
@@ -32,11 +37,11 @@ void runProb1Prob2(Config& config) {
 
     // Convert those local maxima to rho and theta values
     std::vector<std::pair<int, int>> rhoThetaVals;
-    std::cout << "Maxima rho, theta values:" << std::endl;
+    _logger->info("Maxima rho, theta values:");
     for (const auto& val : localMaxima) {
         auto rt = sol::rowColToRhoTheta(val, config._images._input0, config._p2Hough);
         rhoThetaVals.push_back(rt);
-        std::cout << "  (rho = " << rt.first << ", theta = " << rt.second << ")" << std::endl;
+        _logger->info("    (rho = {}, theta = {})", rt.first, rt.second);
     }
 
     // Draw lines computed from rho and theta values onto image
@@ -51,6 +56,7 @@ void runProb1Prob2(Config& config) {
 
 // Executes problem 3
 void runProblem3(Config& config) {
+    _logger->info("////////// Problem 3 output //////////");
     // Compute a blurred version of the noisy input image
     cv::Mat gaussFromNoisy;
     sol::gaussianBlur(config._images._input0Noise, config._p3Edge, gaussFromNoisy);
@@ -72,11 +78,11 @@ void runProblem3(Config& config) {
 
     // Convert local maxima from (row, col) values to (rho, theta) values
     std::vector<std::pair<int, int>> rhoThetaVals;
-    std::cout << "Maxima rho, theta values:" << std::endl;
+    _logger->info("Maxima rho, theta values:");
     for (const auto& val : localMaxima) {
         auto rt = sol::rowColToRhoTheta(val, config._images._input0Noise, config._p3Hough);
         rhoThetaVals.push_back(rt);
-        std::cout << "  (rho = " << rt.first << ", theta = " << rt.second << ")" << std::endl;
+        _logger->info("    (rho = {}, theta = {})", rt.first, rt.second);
     }
 
     // Draw computed lines onto image, converting the image to RGB first to allow for colored lines
@@ -89,6 +95,7 @@ void runProblem3(Config& config) {
 }
 
 void runProblem4(const Config& config) {
+    _logger->info("////////// Problem 4 output //////////");
     // Convert input image to monochrome
     cv::Mat input1Mono;
     cv::cvtColor(config._images._input1, input1Mono, cv::COLOR_RGB2GRAY);
@@ -115,11 +122,11 @@ void runProblem4(const Config& config) {
 
     // Convert local maxima from (row, col) values to (rho, theta) values
     std::vector<std::pair<int, int>> rhoThetaVals;
-    std::cout << "Maxima rho, theta values:" << std::endl;
+    _logger->info("Maxima rho, theta values:");
     for (const auto& val : localMaxima) {
         auto rt = sol::rowColToRhoTheta(val, input1Mono, config._p4Hough);
         rhoThetaVals.push_back(rt);
-        std::cout << "  (rho = " << rt.first << ", theta = " << rt.second << ")" << std::endl;
+        _logger->info("    (rho = {}, theta = {})", rt.first, rt.second);
     }
 
     // Draw lines
@@ -131,7 +138,29 @@ void runProblem4(const Config& config) {
     cv::imwrite(config._outputPathPrefix + "/ps1-4-c-2.png", drawnLines);
 }
 
+void runProblem5(const Config& config) {
+    _logger->info("////////// Problem 5 output //////////");
+    // Convert input image to monochrome
+    cv::Mat input1Mono;
+    cv::cvtColor(config._images._input1, input1Mono, cv::COLOR_RGB2GRAY);
+    input1Mono.convertTo(input1Mono, CV_32FC1); // Convert to floating point for gaussian
+
+    // Blur the input image
+    cv::Mat blurred;
+    sol::gaussianBlur(input1Mono, config._p4Edge, blurred);
+
+    // Find edges in the input image
+    cv::Mat edges;
+    sol::generateEdge(input1Mono, config._p4Edge, edges);
+
+    // Build accumulator matrix for Hough line transform
+    cv::Mat accumulator;
+    sol::houghCirclesAccumulate(edges, 20, accumulator);
+    cv::imwrite(config._outputPathPrefix + "/ps1-5-a-1.png", accumulator);
+}
+
 int main() {
+    _logger = spdlog::basic_logger_mt("logger", "ps1_log.txt");
     Config config(CONFIG_FILE_PATH);
     // Run Problems 1 and 2
     runProb1Prob2(config);
@@ -140,4 +169,8 @@ int main() {
     runProblem3(config);
 
     runProblem4(config);
+
+    runProblem5(config);
+
+    return 0;
 }

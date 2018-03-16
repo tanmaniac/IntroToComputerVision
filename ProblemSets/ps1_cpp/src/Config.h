@@ -2,6 +2,7 @@
 
 // Structures to hold runtime configurations.
 #include <yaml-cpp/yaml.h>
+#include "spdlog/spdlog.h"
 
 #include <opencv2/core/core.hpp>
 
@@ -10,6 +11,8 @@
 
 class Config {
 private:
+    std::shared_ptr<spdlog::logger> _logger;
+
     struct BasicConfig {
         bool configDone();
 
@@ -22,7 +25,8 @@ private:
                 val = node[key].as<T>();
                 return true;
             }
-            std::cerr << "Could not load param \"" << key << "\"" << std::endl;
+            auto tmpLogger = spdlog::get("logger");
+            tmpLogger->error("Could not load param \"{}\"", key);
             return false;
         }
 
@@ -55,7 +59,7 @@ public:
     };
 
     struct Hough : BasicConfig {
-        float _rhoBinSize, _thetaBinSize, _numPeaks;
+        unsigned int _rhoBinSize, _thetaBinSize, _numPeaks;
         int _threshold;
 
         Hough() = default;

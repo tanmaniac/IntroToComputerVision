@@ -18,7 +18,13 @@ set (EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/bin/")
 #######################################
 add_subdirectory(external)
 
-include_directories(external/yaml-cpp-yaml-cpp-0.6.1/include)
+include_directories(external/yaml-cpp/include)
+include_directories(external/spdlog/include)
+
+#######################################
+# Utility library
+#######################################
+add_subdirectory(common)
 include_directories(common/include)
 
 #######################################
