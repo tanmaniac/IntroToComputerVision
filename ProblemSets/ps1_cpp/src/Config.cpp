@@ -52,10 +52,20 @@ Config::EdgeDetect::EdgeDetect(const YAML::Node& edgeDetectNode) {
     _configDone = loadSuccess;
 }
 
-Config::Hough::Hough(const YAML::Node& houghNode) {
+Config::HoughLines::HoughLines(const YAML::Node& houghNode) {
     bool loadSuccess = true;
     loadSuccess = loadParam(houghNode, "rho_bin_size", _rhoBinSize);
     loadSuccess = loadParam(houghNode, "theta_bin_size", _thetaBinSize);
+    loadSuccess = loadParam(houghNode, "threshold", _threshold);
+    loadSuccess = loadParam(houghNode, "num_peaks", _numPeaks);
+
+    _configDone = loadSuccess;
+}
+
+Config::HoughCircles::HoughCircles(const YAML::Node& houghNode) {
+    bool loadSuccess = true;
+    loadSuccess = loadParam(houghNode, "min_radius", _minRadius);
+    loadSuccess = loadParam(houghNode, "max_radius", _maxRadius);
     loadSuccess = loadParam(houghNode, "threshold", _threshold);
     loadSuccess = loadParam(houghNode, "num_peaks", _numPeaks);
 
@@ -104,7 +114,7 @@ bool Config::loadConfig(const YAML::Node& config) {
     }
 
     if (YAML::Node houghNode = config["hough_transform_p2"]) {
-        _p2Hough = Hough(houghNode);
+        _p2Hough = HoughLines(houghNode);
     }
 
     if (YAML::Node edgeDetectNode = config["edge_detector_p3"]) {
@@ -112,7 +122,7 @@ bool Config::loadConfig(const YAML::Node& config) {
     }
 
     if (YAML::Node houghNode = config["hough_transform_p3"]) {
-        _p3Hough = Hough(houghNode);
+        _p3Hough = HoughLines(houghNode);
     }
 
     if (YAML::Node edgeDetectNode = config["edge_detector_p4"]) {
@@ -120,7 +130,23 @@ bool Config::loadConfig(const YAML::Node& config) {
     }
 
     if (YAML::Node houghNode = config["hough_transform_p4"]) {
-        _p4Hough = Hough(houghNode);
+        _p4Hough = HoughLines(houghNode);
+    }
+
+    if (YAML::Node edgeDetectNode = config["edge_detector_p5"]) {
+        _p5Edge = EdgeDetect(edgeDetectNode);
+    }
+
+    if (YAML::Node houghNode = config["hough_circle_transform_p5"]) {
+        _p5Hough = HoughCircles(houghNode);
+    }
+
+    if (YAML::Node edgeDetectNode = config["edge_detector_p6"]) {
+        _p6Edge = EdgeDetect(edgeDetectNode);
+    }
+
+    if (YAML::Node houghNode = config["hough_transform_p6"]) {
+        _p6Hough = HoughLines(houghNode);
     }
 
     bool configSuccess = true;
@@ -151,6 +177,22 @@ bool Config::loadConfig(const YAML::Node& config) {
     }
     if (!_p4Hough.configDone()) {
         _logger->error("Loading Hough transform parameters for Problem 4 failed!");
+        configSuccess = false;
+    }
+    if (!_p5Edge.configDone()) {
+        _logger->error("Loading edge detection parameters for Problem 5 failed!");
+        configSuccess = false;
+    }
+    if (!_p5Hough.configDone()) {
+        _logger->error("Loading Hough transform parameters for Problem 5 failed!");
+        configSuccess = false;
+    }
+    if (!_p6Edge.configDone()) {
+        _logger->error("Loading edge detection parameters for Problem 6 failed!");
+        configSuccess = false;
+    }
+    if (!_p6Hough.configDone()) {
+        _logger->error("Loading Hough transform parameters for Problem 6 failed!");
         configSuccess = false;
     }
 

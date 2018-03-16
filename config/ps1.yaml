@@ -50,4 +50,32 @@ hough_transform_p4:
   theta_bin_size: 1
   num_peaks: 10
   threshold: 130
+
+# Problem 5 configuration
+edge_detector_p5:
+  gaussian_size: 13
+  gaussian_sigma: 4
+  lower_threshold: 10
+  upper_threshold: 70
+  sobel_aperture_size: 3
+
+hough_circle_transform_p5:
+  min_radius: 20
+  max_radius: 50
+  num_peaks: 10
+  threshold: 130
+
+  # Problem 4 configuration
+edge_detector_p6:
+  gaussian_size: 7
+  gaussian_sigma: 5
+  lower_threshold: 50
+  upper_threshold: 140
+  sobel_aperture_size: 3
+
+hough_transform_p6:
+  rho_bin_size: 2
+  theta_bin_size: 3
+  num_peaks: 10
+  threshold: 80
 ...

@@ -11,7 +11,9 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include <cmath>
+#include <cstdint>
 #include <iostream>
+#include <unordered_map>
 
 static constexpr float PI = 3.14159265;
 
@@ -66,7 +68,7 @@ void sol::gaussianBlur(const cv::Mat& input, const Config::EdgeDetect& config, c
 }
 
 void sol::houghLinesAccumulate(const cv::Mat& edgeMask,
-                               const Config::Hough& config,
+                               const Config::HoughLines& config,
                                cv::Mat& accumulator) {
     cuda::houghLinesAccumulate(edgeMask, config._rhoBinSize, config._thetaBinSize, accumulator);
 }
@@ -85,7 +87,7 @@ void sol::findLocalMaxima(const cv::Mat& accumulator,
 
 std::pair<int, int> sol::rowColToRhoTheta(const std::pair<unsigned int, unsigned int>& coordinates,
                                           const cv::Mat& inputImage,
-                                          const Config::Hough& config) {
+                                          const Config::HoughLines& config) {
     const size_t diagDist =
         ceil(sqrt(inputImage.rows * inputImage.rows + inputImage.cols * inputImage.cols));
     int rho = coordinates.first * config._rhoBinSize - diagDist;
@@ -117,4 +119,63 @@ void sol::drawLineParametric(cv::Mat& image,
     }
 
     cv::line(image, start, end, color, 1);
+}
+
+void sol::drawLinesParametric(cv::Mat& image,
+                              const std::vector<std::pair<int, int>>& rhoTheta,
+                              const cv::Scalar color) {
+    for (const auto& val : rhoTheta) {
+        drawLineParametric(image, val.first, val.second, color);
+    }
+}
+
+void sol::drawCircles(cv::Mat& image,
+                      const std::vector<std::pair<unsigned int, unsigned int>>& centers,
+                      const size_t radius,
+                      const cv::Scalar color) {
+    for (const auto& center : centers) {
+        cv::circle(image, cv::Point(center.second, center.first), radius, color);
+    }
+}
+
+void sol::findParallelLines(const std::vector<std::pair<uint32_t, uint32_t>>& rhoTheta,
+                            const size_t deltaTheta,
+                            const size_t deltaRho,
+                            std::vector<std::pair<uint32_t, uint32_t>>& parallelRhoThetas) {
+    // Key = combination of rho and theta bin; Value = index of rhoTheta pair
+    typedef std::unordered_multimap<uint64_t, size_t> MapType;
+    MapType lines;
+    parallelRhoThetas.clear();
+
+    // Bin each line by rho and theta values and place them in a map
+    for (size_t idx = 0; idx < rhoTheta.size(); idx++) {
+        auto line = rhoTheta[idx];
+        uint32_t rhoBin = line.first / deltaRho * deltaRho;
+        uint32_t thetaBin = line.second / deltaTheta * deltaTheta;
+
+        uint64_t key = 0;
+        key = ((key | rhoBin) << 32) | thetaBin;
+
+        lines.insert(std::make_pair(key, idx));
+    }
+
+    // Iterate over the map
+    for (auto iter = lines.begin(); iter != lines.end();) {
+        auto key = iter->first;
+        // See if this key has more than one value in its bucket
+        if (lines.count(key) > 1) {
+            auto range = lines.equal_range(key);
+            // Push each resulting pair onto the output vector
+            std::for_each(range.first,
+                          range.second,
+                          [&parallelRhoThetas, &rhoTheta](MapType::value_type& value) {
+                              parallelRhoThetas.push_back(rhoTheta[value.second]);
+                          });
+        }
+
+        // Advance to next unique key
+        do {
+            ++iter;
+        } while (iter != lines.end() && key == iter->first);
+    }
 }

@@ -24,7 +24,7 @@ void gaussianBlur(const cv::Mat& input, const Config::EdgeDetect& config, cv::Ma
  * Computes the Hough Transform for lines and produces an accumulator array.
  */
 void houghLinesAccumulate(const cv::Mat& edgeMask,
-                          const Config::Hough& config,
+                          const Config::HoughLines& config,
                           cv::Mat& accumulator);
 
 void houghCirclesAccumulate(const cv::Mat& edgeMask, const size_t radius, cv::Mat& accumulator);
@@ -55,6 +55,22 @@ void findLocalMaxima(const cv::Mat& accumulator,
 // image.
 std::pair<int, int> rowColToRhoTheta(const std::pair<unsigned int, unsigned int>& coordinates,
                                      const cv::Mat& inputImage,
-                                     const Config::Hough& config);
+                                     const Config::HoughLines& config);
 void drawLineParametric(cv::Mat& image, const float rho, const float theta, const cv::Scalar color);
+
+// Draw all the lines in a vector of (rho, theta) pairs.
+void drawLinesParametric(cv::Mat& image,
+                         const std::vector<std::pair<int, int>>& rhoTheta,
+                         const cv::Scalar color);
+
+// Draw all the circles in a vector of (y, x) pairs.
+void drawCircles(cv::Mat& image,
+                 const std::vector<std::pair<unsigned int, unsigned int>>& center,
+                 const size_t radius,
+                 const cv::Scalar color);
+
+void findParallelLines(const std::vector<std::pair<uint32_t, uint32_t>>& rhoTheta,
+                       const size_t deltaTheta,
+                       const size_t deltaRho,
+                       std::vector<std::pair<uint32_t, uint32_t>>& parallelRhoThetas);
 }; // namespace sol

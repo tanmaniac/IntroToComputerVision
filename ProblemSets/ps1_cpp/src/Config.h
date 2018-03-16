@@ -59,16 +59,26 @@ public:
     };
 
     struct Hough : BasicConfig {
-        unsigned int _rhoBinSize, _thetaBinSize, _numPeaks;
+        unsigned int _numPeaks;
         int _threshold;
+    };
 
-        Hough() = default;
-        Hough(const YAML::Node& houghNode);
+    struct HoughLines : Hough {
+        unsigned int _rhoBinSize, _thetaBinSize;
+        HoughLines() = default;
+        HoughLines(const YAML::Node& houghNode);
+    };
+
+    struct HoughCircles : Hough {
+        unsigned int _minRadius, _maxRadius;
+        HoughCircles() = default;
+        HoughCircles(const YAML::Node& houghNode);
     };
 
     Images _images;
-    EdgeDetect _p2Edge, _p3Edge, _p4Edge;
-    Hough _p2Hough, _p3Hough, _p4Hough;
+    EdgeDetect _p2Edge, _p3Edge, _p4Edge, _p5Edge, _p6Edge;
+    HoughLines _p2Hough, _p3Hough, _p4Hough, _p6Hough;
+    HoughCircles _p5Hough;
 
     std::string _outputPathPrefix;
 
