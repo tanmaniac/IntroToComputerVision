@@ -1,0 +1,115 @@
+---
+# Problem set 1 configuration
+images:
+  input0: ../Resources/ProblemSet1/ps1-input0.png
+  input0_noise: ../Resources/ProblemSet1/ps1-input0-noise.png
+  input1: ../Resources/ProblemSet1/ps1-input1.png
+  input2: ../Resources/ProblemSet1/ps1-input2.png
+  input3: ../Resources/ProblemSet1/ps1-input3.png
+output_dir: ./ps1_output
+
+# Problem 2 configuration
+# Edge detector options
+edge_detector_p2:
+  gaussian_size: 1
+  gaussian_sigma: 0.0001
+  lower_threshold: 1
+  upper_threshold: 3
+  sobel_aperture_size: 3
+
+hough_transform_p2:
+  rho_bin_size: 1
+  theta_bin_size: 1
+  num_peaks: 6
+  threshold: 200
+
+# Problem 3 configuration
+edge_detector_p3:
+  gaussian_size: 19
+  gaussian_sigma: 4
+  lower_threshold: 10
+  upper_threshold: 50
+  sobel_aperture_size: 3
+
+hough_transform_p3:
+  rho_bin_size: 2
+  theta_bin_size: 2
+  num_peaks: 6
+  threshold: 5
+
+# Problem 4 configuration
+edge_detector_p4:
+  gaussian_size: 13
+  gaussian_sigma: 4
+  lower_threshold: 20
+  upper_threshold: 80
+  sobel_aperture_size: 3
+
+hough_transform_p4:
+  rho_bin_size: 1
+  theta_bin_size: 1
+  num_peaks: 10
+  threshold: 130
+
+# Problem 5 configuration
+edge_detector_p5:
+  gaussian_size: 13
+  gaussian_sigma: 4
+  lower_threshold: 10
+  upper_threshold: 70
+  sobel_aperture_size: 3
+
+hough_circle_transform_p5:
+  min_radius: 20
+  max_radius: 50
+  num_peaks: 10
+  threshold: 130
+
+# Problem 6 configuration
+edge_detector_p6:
+  gaussian_size: 7
+  gaussian_sigma: 5
+  lower_threshold: 50
+  upper_threshold: 140
+  sobel_aperture_size: 3
+
+hough_transform_p6:
+  rho_bin_size: 2
+  theta_bin_size: 3
+  num_peaks: 10
+  threshold: 80
+
+# Problem 7 configuration
+edge_detector_p7:
+  gaussian_size: 3
+  gaussian_sigma: 1
+  lower_threshold: 35
+  upper_threshold: 130
+  sobel_aperture_size: 3
+
+hough_circle_transform_p7:
+  min_radius: 20
+  max_radius: 40
+  num_peaks: 10
+  threshold: 135
+
+# Problem 8 configuration
+edge_detector_p8:
+  gaussian_size: 3
+  gaussian_sigma: 2
+  lower_threshold: 40
+  upper_threshold: 90
+  sobel_aperture_size: 3
+
+hough_line_transform_p8:
+  rho_bin_size: 1
+  theta_bin_size: 1
+  num_peaks: 10
+  threshold: 105
+
+hough_circle_transform_p8:
+  min_radius: 20
+  max_radius: 40
+  num_peaks: 5
+  threshold: 110
+...
