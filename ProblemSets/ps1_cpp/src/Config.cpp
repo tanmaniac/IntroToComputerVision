@@ -149,6 +149,26 @@ bool Config::loadConfig(const YAML::Node& config) {
         _p6Hough = HoughLines(houghNode);
     }
 
+    if (YAML::Node edgeDetectNode = config["edge_detector_p7"]) {
+        _p7Edge = EdgeDetect(edgeDetectNode);
+    }
+
+    if (YAML::Node houghNode = config["hough_circle_transform_p7"]) {
+        _p7Hough = HoughCircles(houghNode);
+    }
+
+    if (YAML::Node edgeDetectNode = config["edge_detector_p8"]) {
+        _p8Edge = EdgeDetect(edgeDetectNode);
+    }
+
+    if (YAML::Node houghNode = config["hough_circle_transform_p8"]) {
+        _p8HoughCircles = HoughCircles(houghNode);
+    }
+
+    if (YAML::Node houghNode = config["hough_line_transform_p8"]) {
+        _p8HoughLines = HoughLines(houghNode);
+    }
+
     bool configSuccess = true;
     // Verify that configurations were successful
     if (!_images.configDone()) {
@@ -193,6 +213,26 @@ bool Config::loadConfig(const YAML::Node& config) {
     }
     if (!_p6Hough.configDone()) {
         _logger->error("Loading Hough transform parameters for Problem 6 failed!");
+        configSuccess = false;
+    }
+    if (!_p7Edge.configDone()) {
+        _logger->error("Loading edge detection parameters for Problem 7 failed!");
+        configSuccess = false;
+    }
+    if (!_p7Hough.configDone()) {
+        _logger->error("Loading Hough transform parameters for Problem 7 failed!");
+        configSuccess = false;
+    }
+    if (!_p8Edge.configDone()) {
+        _logger->error("Loading edge detection parameters for Problem 8 failed!");
+        configSuccess = false;
+    }
+    if (!_p8HoughCircles.configDone()) {
+        _logger->error("Loading Hough circle transform parameters for Problem 8 failed!");
+        configSuccess = false;
+    }
+    if (!_p8HoughLines.configDone()) {
+        _logger->error("Loading Hough line transform parameters for Problem 8 failed!");
         configSuccess = false;
     }
 

@@ -76,9 +76,9 @@ public:
     };
 
     Images _images;
-    EdgeDetect _p2Edge, _p3Edge, _p4Edge, _p5Edge, _p6Edge;
-    HoughLines _p2Hough, _p3Hough, _p4Hough, _p6Hough;
-    HoughCircles _p5Hough;
+    EdgeDetect _p2Edge, _p3Edge, _p4Edge, _p5Edge, _p6Edge, _p7Edge, _p8Edge;
+    HoughLines _p2Hough, _p3Hough, _p4Hough, _p6Hough, _p8HoughLines;
+    HoughCircles _p5Hough, _p7Hough, _p8HoughCircles;
 
     std::string _outputPathPrefix;
 

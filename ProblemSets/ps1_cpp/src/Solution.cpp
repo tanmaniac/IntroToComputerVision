@@ -1,5 +1,4 @@
 #include "Solution.h"
-#include "Convolution.h"
 #include "Hough.h"
 
 #include <yaml-cpp/yaml.h>
@@ -48,12 +47,6 @@ void sol::generateEdge(const cv::Mat& input, const Config::EdgeDetect& config, c
 }
 
 void sol::gaussianBlur(const cv::Mat& input, const Config::EdgeDetect& config, cv::Mat& output) {
-    /*cv::Mat colGaussian =
-        cv::getGaussianKernel(config._gaussianSize, config._gaussianSigma, CV_32F);
-    cv::Mat rowGaussian;
-    cv::transpose(colGaussian, rowGaussian);
-    // Running CUDA convolution
-    separableConvolution(input, rowGaussian, colGaussian, output);*/
     cv::cuda::GpuMat d_input(input);
     cv::cuda::GpuMat d_blurred(input.size(), input.type());
     cv::Ptr<cv::cuda::Filter> gaussian =

@@ -58,7 +58,15 @@ __global__ void houghLinesAccumulateKernel(const uint2* const maskedPoints,
     }
 }
 
-// Horrible global memory implementation
+/**
+ * \brief Accumulate points as given by the circle Hough transform. This implementation is
+ * reasonably fast, since it just operates on the mask points and not on the entire image.
+ *
+ * \param maskedPoints input array of the (x,y) coordinates of each masked point.
+ * \param numPoints length in maskedPoints
+ * \param radius radius of which the transform is computed
+ * \param histo output accumulator matrix
+ */
 __global__ void houghCirclesAccumulateKernel(const uint2* const maskedPoints,
                                              const size_t numPoints,
                                              const size_t radius,
@@ -80,7 +88,7 @@ __global__ void houghCirclesAccumulateKernel(const uint2* const maskedPoints,
         b = thisPoint.y - radius * sinTheta;
 
         // Make sure we're within the bounds of the image
-        if (a < histo.cols && b < histo.rows) {
+        if (a < histo.cols && b < histo.rows && a > 0 && b > 0) {
             atomicAdd(&histo(b, a), 1);
         }
     }
@@ -120,8 +128,8 @@ struct HoughPoint2D {
  * \brief Find the local maxima of the Hough transform accumulator. If it's a maxima, set the index
  * in the mask output to 1; if not, set to 0.
  * \param accumulator Hough transform accumulator matrix, where y axis is rho and x axis is theta
- * \param localMaximaPoints Binary mask of local maxima, where 1 is marked as being a local maxima
- * and 0 is not
+ * \param localMaximaPoints Array of HoughPoint2D structures that contain local maxima and voting
+ * information for each point
  *
  * TODO: Use Trove for higher-performance array-of-structures access
  * https://github.com/bryancatanzaro/trove
@@ -156,7 +164,12 @@ __global__ void findLocalMaximaKernel(const cv::cuda::PtrStepSz<int> accumulator
 // Edge images are massive sparse vectors, so I want to compact them down into more manageable
 // arrays rather than wasting lots of warps processing empty pixels
 
-// Convert matrix into a row-vector of (x, y) points
+/**
+ * \brief Convert entire matrix into a row-vector of (x, y) points
+ *
+ * \param image Input matrix
+ * \param points Output array of (x,y) coordinates of each point
+ */
 __global__ void maskToPointKernel(const cv::cuda::PtrStepSz<unsigned char> image, uint2* points) {
     const uint2 threadPos = getPosition();
 
@@ -165,12 +178,21 @@ __global__ void maskToPointKernel(const cv::cuda::PtrStepSz<unsigned char> image
     }
 }
 
+// Model of Predicate used in the stream compact stage
 struct IsNonzero {
     __host__ __device__ bool operator()(const unsigned char val) {
         return val > 0;
     }
 };
 
+/**
+ * \brief Compact masked points into a contiguous array of (x,y) coordinate points. The image
+ * containing the edge mask is sparse, so it's extremely inefficient to launch MxN threads to handle
+ * all of them, so we just operate on the points that we need to operate on.
+ *
+ * \param edgeMask input binary matrix of masked points
+ * \param points output vector of only the masked points, stored as (x,y) coordinates
+ */
 void streamCompactMask(const cv::cuda::GpuMat& edgeMask, thrust::device_vector<uint2>& points) {
     assert(edgeMask.isContinuous());
     auto logger = spdlog::get("logger");

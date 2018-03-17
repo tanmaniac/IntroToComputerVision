@@ -235,23 +235,161 @@ void runProblem6(const Config& config) {
     cv::imwrite(config._outputPathPrefix + "/ps1-6-c-1.png", drawnLines);
 }
 
-int main() {
-    // Setup
-    _logger = spdlog::basic_logger_mt("logger", "ps1_log.txt");
-    Config config(CONFIG_FILE_PATH);
-    auto start = std::chrono::high_resolution_clock::now();
+void runProblem7(const Config& config) {
+    _logger->info("////////// Problem 7 output //////////");
+    // Convert input image to monochrome
+    cv::Mat input2Mono;
+    cv::cvtColor(config._images._input2, input2Mono, cv::COLOR_RGB2GRAY);
+    input2Mono.convertTo(input2Mono, CV_32FC1); // Convert to floating point for gaussian
 
-    // Run Problems 1 and 2
+    // Erode image to enhance circles
+    cv::Mat eroded;
+    cv::Mat structuringDisk = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5));
+    cv::erode(input2Mono, eroded, structuringDisk);
+
+    // Find edges in the input image
+    cv::Mat edges;
+    sol::generateEdge(eroded, config._p7Edge, edges);
+    cv::imwrite(config._outputPathPrefix + "/ps1-7-a-0.1.png", edges);
+
+    // Build accumulator matrix for Hough circle transform
+    cv::Mat accumulator;
+    // Find local maxima in accumulation matrix
+    std::vector<std::pair<unsigned int, unsigned int>> localMaxima;
+    // Draw circles
+    cv::Mat circles;
+    // Iteratively find circles in image
+    cv::cvtColor(input2Mono, circles, CV_GRAY2RGB); // Effectively reset the previous image
+    for (size_t radius = config._p7Hough._minRadius; radius <= config._p7Hough._maxRadius;
+         radius++) {
+        accumulator = 0;
+        localMaxima.clear();
+        sol::houghCirclesAccumulate(edges, radius, accumulator);
+        sol::findLocalMaxima(accumulator, config._p7Hough, localMaxima);
+        sol::drawCircles(circles, localMaxima, radius, CV_RGB(0, 0xFF, 0));
+    }
+    cv::imwrite(config._outputPathPrefix + "/ps1-7-a-1.png", circles);
+}
+
+void runProblem8(const Config& config) {
+    _logger->info("////////// Problem 8 output //////////");
+    // Convert input image to monochrome
+    cv::Mat input3Mono;
+    cv::cvtColor(config._images._input3, input3Mono, cv::COLOR_RGB2GRAY);
+    input3Mono.convertTo(input3Mono, CV_32FC1); // Convert to floating point for gaussian
+
+    // Erode image to enhance circles
+    cv::Mat eroded;
+    cv::Mat structuringDisk = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5));
+    cv::erode(input3Mono, eroded, structuringDisk);
+
+    // Find edges in the input image
+    cv::Mat edges;
+    sol::generateEdge(eroded, config._p8Edge, edges);
+    cv::imwrite(config._outputPathPrefix + "/ps1-8-a-0.1.png", edges);
+
+    // Build accumulator matrix for Hough line transform
+    cv::Mat accumulator;
+    // Find local maxima in accumulation matrix
+    std::vector<std::pair<unsigned int, unsigned int>> localMaxima;
+    // Draw circles
+    cv::Mat marked;
+    // Iteratively find circles in image
+    cv::cvtColor(input3Mono, marked, CV_GRAY2RGB); // Effectively reset the previous image
+    for (size_t radius = config._p8HoughCircles._minRadius;
+         radius <= config._p8HoughCircles._maxRadius;
+         radius++) {
+        accumulator = 0;
+        localMaxima.clear();
+        sol::houghCirclesAccumulate(edges, radius, accumulator);
+        sol::findLocalMaxima(accumulator, config._p8HoughCircles, localMaxima);
+        sol::drawCircles(marked, localMaxima, radius, CV_RGB(0, 0xFF, 0));
+    }
+
+    // Build accumulator matrix for Hough line transform
+    accumulator = 0;
+    localMaxima.clear();
+    sol::houghLinesAccumulate(edges, config._p8HoughLines, accumulator);
+
+    // Find local maxima in accumulation matrix
+    sol::findLocalMaxima(accumulator, config._p8HoughLines, localMaxima);
+
+    // Convert local maxima from (row, col) values to (rho, theta) values
+    std::vector<std::pair<int, int>> rhoThetaVals;
+    for (const auto& val : localMaxima) {
+        rhoThetaVals.push_back(sol::rowColToRhoTheta(val, input3Mono, config._p8HoughLines));
+    }
+
+    // Draw lines
+    sol::drawLinesParametric(marked, rhoThetaVals, CV_RGB(0, 0xFF, 0));
+
+    cv::imwrite(config._outputPathPrefix + "/ps1-8-a-1.png", marked);
+}
+
+int main() {
+    auto progStart = std::chrono::high_resolution_clock::now();
+    // Logging setup
+    // Shared file sink to write to a file
+    // auto sharedFileSink = std::make_shared<spdlog::sinks::simple_file_sink_mt>("ps1_log.txt");
+    //_logger = std::make_shared<spdlog::logger>("logger", sharedFileSink);
+    _logger = spdlog::basic_logger_mt("logger", "ps1.log");
+    // stdout sink + file sink
+    // auto consoleLogger = std::make_shared<spdlog::logger>("consoleLogger", sharedFileSink);
+    auto consoleLogger = spdlog::stdout_logger_mt("console");
+
+    Config config(CONFIG_FILE_PATH);
+
+    consoleLogger->info("Launching Problem 1 and 2");
+    auto start = std::chrono::high_resolution_clock::now();
     runProb1Prob2(config);
-    // Run Problem 3
+    auto stop = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> runtime = stop - start;
+    consoleLogger->info("Problem 1+2 runtime = {} ms", runtime.count());
+
+    consoleLogger->info("Launching Problem 3");
+    start = std::chrono::high_resolution_clock::now();
     runProblem3(config);
+    stop = std::chrono::high_resolution_clock::now();
+    runtime = stop - start;
+    consoleLogger->info("Problem 3 runtime = {} ms", runtime.count());
+
+    consoleLogger->info("Launching Problem 4");
+    start = std::chrono::high_resolution_clock::now();
     runProblem4(config);
+    stop = std::chrono::high_resolution_clock::now();
+    runtime = stop - start;
+    consoleLogger->info("Problem 4 runtime = {} ms", runtime.count());
+
+    consoleLogger->info("Launching Problem 5");
+    start = std::chrono::high_resolution_clock::now();
     runProblem5(config);
+    stop = std::chrono::high_resolution_clock::now();
+    runtime = stop - start;
+    consoleLogger->info("Problem 5 runtime = {} ms", runtime.count());
+
+    consoleLogger->info("Launching Problem 6");
+    start = std::chrono::high_resolution_clock::now();
     runProblem6(config);
+    stop = std::chrono::high_resolution_clock::now();
+    runtime = stop - start;
+    consoleLogger->info("Problem 6 runtime = {} ms", runtime.count());
+
+    consoleLogger->info("Launching Problem 7");
+    start = std::chrono::high_resolution_clock::now();
+    runProblem7(config);
+    stop = std::chrono::high_resolution_clock::now();
+    runtime = stop - start;
+    consoleLogger->info("Problem 7 runtime = {} ms", runtime.count());
+
+    consoleLogger->info("Launching Problem 8");
+    start = std::chrono::high_resolution_clock::now();
+    runProblem8(config);
+    stop = std::chrono::high_resolution_clock::now();
+    runtime = stop - start;
+    consoleLogger->info("Problem 8 runtime = {} ms", runtime.count());
 
     // Record runtime
-    auto finish = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> runtime = finish - start;
+    runtime = stop - progStart;
     _logger->info("Total runtime = {} ms", runtime.count());
     _logger->info("------------------------------------------------------------");
     return 0;

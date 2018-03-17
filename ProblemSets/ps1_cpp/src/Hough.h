@@ -10,11 +10,28 @@
 // C++ wrappers around CUDA kernels
 
 namespace cuda {
+
+/**
+ * \brief Create Hough lines accumulation matrix.
+ *
+ * \param edgemask input matrix of edges
+ * \param rhoBinSize rho resolution
+ * \param thetaBinSize theta resolution
+ * \pararm accumulator output matrix of accumulated votes
+ */
 void houghLinesAccumulate(const cv::cuda::GpuMat& edgeMask,
                           const unsigned int rhoBinSize,
                           const unsigned int thetaBinSize,
                           cv::cuda::GpuMat& accumulator);
 
+/**
+ * \brief Create Hough lines accumulation matrix.
+ *
+ * \param edgemask input matrix of edges
+ * \param rhoBinSize rho resolution
+ * \param thetaBinSize theta resolution
+ * \pararm accumulator output matrix of accumulated votes
+ */
 void houghLinesAccumulate(const cv::Mat& edgeMask,
                           const unsigned int rhoBinSize,
                           const unsigned int thetaBinSize,
@@ -46,9 +63,23 @@ void findLocalMaxima(const cv::Mat& accumulator,
                      const int threshold,
                      std::vector<std::pair<unsigned int, unsigned int>>& localMaxima);
 
+/**
+ * \brief Create Hough circles accumulation matrix
+ *
+ * \param edgeMask input matrix of edges
+ * \param radius radius to which the Hough transform is computed
+ * \param accumulator output matrix of accumulated votes
+ */
 void houghCirclesAccumulate(const cv::cuda::GpuMat& edgeMask,
                             const size_t radius,
                             cv::cuda::GpuMat& accumulator);
 
+/**
+ * \brief Create Hough circles accumulation matrix
+ *
+ * \param edgeMask input matrix of edges
+ * \param radius radius to which the Hough transform is computed
+ * \param accumulator output matrix of accumulated votes
+ */
 void houghCirclesAccumulate(const cv::Mat& edgeMask, const size_t radius, cv::Mat& accumulator);
 }; // namespace cuda
