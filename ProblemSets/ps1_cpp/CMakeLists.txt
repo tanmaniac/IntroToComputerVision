@@ -5,5 +5,3 @@ file(GLOB cu src/*.cu src/*.cuh)
 cuda_add_executable(ps1 ${hdr} ${cu} ${src})
 
 target_link_libraries(ps1 yaml-cpp cv_common)
-
-#set(EXECUTABLE_OUTPUT_PATH "${EXECUTABLE_OUTPUT_PATH}/ps0")

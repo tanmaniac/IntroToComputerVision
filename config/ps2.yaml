@@ -1,0 +1,20 @@
+---
+# Problem Set 2 configuration
+images:
+  pair0-L: ../Resources/ProblemSet2/pair0-L.png
+  pair0-R: ../Resources/ProblemSet2/pair0-R.png
+  pair1-L: ../Resources/ProblemSet2/pair1-L.png
+  pair1-R: ../Resources/ProblemSet2/pair1-R.png
+  pair2-L: ../Resources/ProblemSet2/pair2-L.png
+  pair2-R: ../Resources/ProblemSet2/pair2-R.png
+  pair1-GT-L: ../Resources/ProblemSet2/pair1-D_L.png
+  pair1-GT-R: ../Resources/ProblemSet2/pair1-D_R.png
+  pair2-GT-L: ../Resources/ProblemSet2/pair2-D_L.png
+  pair2-GT-R: ../Resources/ProblemSet2/pair2-D_R.png
+
+output_dir: ./ps2_output
+
+# Problem 1 settings
+problem_1:
+  ssd_window_size: 5
+...
