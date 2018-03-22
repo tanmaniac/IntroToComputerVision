@@ -13,6 +13,7 @@ images:
   pair2-GT-R: ../Resources/ProblemSet2/pair2-D_R.png
 
 output_dir: ./ps2_output
+use_gpu_disparity: true
 
 # Problem 1 settings
 problem_1:

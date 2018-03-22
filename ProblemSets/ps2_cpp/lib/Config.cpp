@@ -82,6 +82,12 @@ bool Config::loadConfig(const YAML::Node& config) {
             "No output path specified or could not make new directory; using current directory");
     }
 
+    // Should we use GPU for disparity, or just use CPU
+    if (config["use_gpu_disparity"]) {
+        _useGpuDisparity = config["use_gpu_disparity"].as<bool>();
+        _logger->info("Using GPU for disparity computation");
+    }
+
     bool configSuccess = true;
     // Verify that configurations were successful
     if (!_images.configDone()) {

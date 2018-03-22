@@ -54,6 +54,7 @@ public:
     const std::string _loggerName = "logger";
 
     Images _images;
+    bool _useGpuDisparity = false;
 
     std::string _outputPathPrefix;
 

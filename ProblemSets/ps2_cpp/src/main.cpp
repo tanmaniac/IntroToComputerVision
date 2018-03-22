@@ -23,7 +23,7 @@ void runProblem1(const Config& config) {
     config._images._pair0.first.convertTo(left, CV_32FC1);
     config._images._pair0.second.convertTo(right, CV_32FC1);
 
-    /**
+    if (!config._useGpuDisparity) {
         serial::disparitySSD(left, right, ReferenceFrame::LEFT, 6, 0, 3, disparity);
         // Normalize for display
         cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
@@ -33,19 +33,19 @@ void runProblem1(const Config& config) {
         // Normalize for display
         cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
         cv::imwrite(config._outputPathPrefix + "/ps2-1-a-2.png", disparity);
-        */
-
-    // Run CUDA version
-    disparity = 0;
-    cuda::disparitySSD(left, right, ReferenceFrame::LEFT, 6, 0, 3, disparity);
-    // Normalize for display
-    cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-    cv::imwrite(config._outputPathPrefix + "/ps2-1-a-1.png", disparity);
-    disparity = 0;
-    cuda::disparitySSD(left, right, ReferenceFrame::RIGHT, 6, 0, 3, disparity);
-    // Normalize for display
-    cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-    cv::imwrite(config._outputPathPrefix + "/ps2-1-a-2.png", disparity);
+    } else {
+        // Run CUDA version
+        disparity = 0;
+        cuda::disparitySSD(left, right, ReferenceFrame::LEFT, 6, 0, 3, disparity);
+        // Normalize for display
+        cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+        cv::imwrite(config._outputPathPrefix + "/ps2-1-a-1.png", disparity);
+        disparity = 0;
+        cuda::disparitySSD(left, right, ReferenceFrame::RIGHT, 6, 0, 3, disparity);
+        // Normalize for display
+        cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+        cv::imwrite(config._outputPathPrefix + "/ps2-1-a-2.png", disparity);
+    }
 
     // Record end time
     auto finish = std::chrono::high_resolution_clock::now();
