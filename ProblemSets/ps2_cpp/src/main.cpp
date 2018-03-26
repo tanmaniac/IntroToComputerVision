@@ -36,12 +36,12 @@ void runProblem1(const Config& config) {
     } else {
         // Run CUDA version
         disparity = 0;
-        cuda::disparitySSD(left, right, ReferenceFrame::LEFT, 6, 0, 3, disparity);
+        cuda::disparitySSD(left, right, ReferenceFrame::LEFT, 10, -3, 0, disparity);
         // Normalize for display
         cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
         cv::imwrite(config._outputPathPrefix + "/ps2-1-a-1.png", disparity);
         disparity = 0;
-        cuda::disparitySSD(left, right, ReferenceFrame::RIGHT, 6, 0, 3, disparity);
+        cuda::disparitySSD(right, left, ReferenceFrame::RIGHT, 8, 0, 5, disparity);
         // Normalize for display
         cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
         cv::imwrite(config._outputPathPrefix + "/ps2-1-a-2.png", disparity);

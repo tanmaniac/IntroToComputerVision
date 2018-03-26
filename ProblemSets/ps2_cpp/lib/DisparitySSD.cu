@@ -6,13 +6,20 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/cuda.hpp>
+#include <opencv2/core/cuda/common.hpp>
 #include <opencv2/core/cuda_stream_accessor.hpp>
+//#include <opencv2/cudev/ptr2d/texture.hpp>
+#include <opencv2/core/opengl.hpp>
 
 #define STEPS 3
 #define BLOCKDIM_X 8
 #define BLOCKDIM_Y 32
 #define WINDOW_RAD 8
 
+texture<float, cudaTextureType2D, cudaReadModeElementType> textureLeft;
+texture<float, cudaTextureType2D, cudaReadModeElementType> textureRight;
+
+// Does not clamp access!
 template <typename T>
 struct Array2DWrapper {
     // Data array on device
@@ -23,7 +30,7 @@ struct Array2DWrapper {
         : _data(data), _rows(rows), _cols(cols) {}
 
     // Access array at index with row value y and column value x
-    __device__ T& operator()(const size_t y, const size_t x) {
+    __device__ T& operator()(const int y, const int x) {
         return _data[y * _cols + x];
     }
 };
@@ -37,106 +44,103 @@ template <typename srcType, typename dispType>
 __global__ void disparitySSDKernel(const cv::cuda::PtrStepSz<srcType> imgLeft,
                                    const cv::cuda::PtrStepSz<srcType> imgRight,
                                    const ReferenceFrame frame,
-                                   const size_t windowRad,
-                                   const size_t minDisparity,
-                                   const size_t maxDisparity,
+                                   const int windowRad,
+                                   const int minDisparity,
+                                   const int maxDisparity,
                                    cv::cuda::PtrStepSz<dispType> disparity) {
-    const uint2 gThreadPos = make_uint2(blockIdx.x * blockDim.x + threadIdx.x + windowRad,
-                                        blockIdx.y * blockDim.y + threadIdx.y + windowRad);
+    const int2 gThreadPos = make_int2(blockIdx.x * blockDim.x + threadIdx.x,
+                                      blockIdx.y * blockDim.y + threadIdx.y);
 
-    if (gThreadPos.x > imgLeft.cols - windowRad || gThreadPos.y > imgLeft.rows - windowRad) {
+    if (gThreadPos.x > imgLeft.cols || gThreadPos.y > imgLeft.rows) {
         return;
     }
 
-    // Copy to shared memory
-    extern __shared__ srcType shmImgs[];
-    size_t stepSize = blockDim.x + 2 * windowRad; // x-dimension of shared memory region
-    size_t steps = 1 + 2 * windowRad;             // y-dimension of shared memory region
-
-    // Determine location within the shared memory arrays
+    // Shared memory indexing
     const uint2 sThreadPos = make_uint2(threadIdx.x + windowRad, threadIdx.y + windowRad);
 
-    // Create wrappers around the shared memory for left and right images for easy access
-    Array2DWrapper<srcType> sharedLeft(shmImgs, steps, stepSize);
-    Array2DWrapper<srcType> sharedRight(shmImgs + stepSize * steps, steps, stepSize);
-
-    // Each thread copies itself and the windowRad pixels above/below it to sh mem
-    for (int y = -windowRad; y <= int(windowRad); y++) {
-        sharedLeft(sThreadPos.y + y, sThreadPos.x) = imgLeft(gThreadPos.y + y, gThreadPos.x);
-        sharedRight(sThreadPos.y + y, sThreadPos.x) = imgRight(gThreadPos.y + y, gThreadPos.x);
-    }
-
-    // Leftmost pixel stores the left side pixels to shared memory
-    if (threadIdx.x == 0) {
-        for (int y = -windowRad; y <= int(windowRad); y++) {
-            for (int x = -windowRad; x < 0; x++) {
-                sharedLeft(sThreadPos.y + y, sThreadPos.x + x) =
-                    imgLeft(gThreadPos.y + y, gThreadPos.x + x);
-                sharedRight(sThreadPos.y + y, sThreadPos.x + x) =
-                    imgRight(gThreadPos.y + y, gThreadPos.x + x);
-            }
-        }
-    }
-
-    // Rightmost pixel stores right side pixels to shared memory
-    if (threadIdx.x == blockDim.x - 1) {
-        for (int y = -windowRad; y <= int(windowRad); y++) {
-            for (int x = 1; x <= windowRad; x++) {
-                sharedLeft(sThreadPos.y + y, sThreadPos.x + x) =
-                    imgLeft(gThreadPos.y + y, gThreadPos.x + x);
-                sharedRight(sThreadPos.y + y, sThreadPos.x + x) =
-                    imgRight(gThreadPos.y + y, gThreadPos.x + x);
-            }
-        }
-    }
-
-    __syncthreads();
-
-    // Print shared memory
-    if (threadIdx.x == 0 && blockIdx.x == 0 && blockIdx.y == 1) {
-        for (int y = 0; y < sharedLeft._rows; y++) {
-            for (int x = 0; x < sharedLeft._cols; x++) {
-                // printf("sharedLeft @ %d, %d (y, x) = %f\n", y, x, sharedLeft(y, x));
-                if (sharedLeft(y, x) != imgLeft(y, x)) {
-                    printf("Difference found @ (%d, %d) (y, x): shared = %f, orig = %f\n",
-                           y,
-                           x,
-                           sharedLeft(y, x),
-                           imgLeft(y, x));
-                }
-            }
-        }
-    }
-
-    int bestCost = 99999999;
+    srcType imLeft, imRight;
+    int rawCost;
+    int bestCost = INT_MAX;
     int bestDisparity = 0;
-    // Iterate over the row to search for a matching window. If the reference frame is the
-    // left image, then we search to the left; if it's the right image, then we search to
-    // the right
-    // Really hacky "zero" index
-    int searchIndex = (frame == ReferenceFrame::LEFT)
-                          ? max(int(windowRad), int(gThreadPos.x) - int(maxDisparity))
-                          : gThreadPos.x;
-    int maxSearchIndex = (frame == ReferenceFrame::LEFT)
-                             ? gThreadPos.x - minDisparity
-                             : min(size_t(imgLeft.cols), gThreadPos.x + maxDisparity);
-    for (; searchIndex <= maxSearchIndex; searchIndex++) {
-        int sum = 0;
-        // Iterate over the window and compute sum of squared differences
-        for (int winY = -windowRad; winY <= int(windowRad); winY++) {
-            for (int winX = -windowRad; winX <= int(windowRad); winX++) {
-                float rawCost = imgLeft(gThreadPos.y + winY, gThreadPos.x + winX) -
-                                imgRight(gThreadPos.y + winY, searchIndex + winX);
-                sum += roundf(rawCost * rawCost);
-            }
-        }
-        if (sum < bestCost) {
-            bestCost = sum;
-            bestDisparity = searchIndex - gThreadPos.x;
-        }
+
+    // Declare shared memory
+    extern __shared__ dispType ssdDiffs[];
+    Array2DWrapper<dispType> diffs(
+        ssdDiffs, blockDim.y + 2 * windowRad, blockDim.x + 2 * windowRad);
+
+    // Copy edge points from left image into local reigsters
+    srcType imLeftA[STEPS];
+    srcType imLeftB[STEPS];
+
+    for (int i = 0; i < STEPS; i++) {
+        int offset = -1 * int(windowRad) + i * windowRad;
+        imLeftA[i] = tex2D(textureLeft, gThreadPos.x - int(windowRad), gThreadPos.y + offset);
+        imLeftB[i] =
+            tex2D(textureLeft, gThreadPos.x - int(windowRad) + blockDim.x, gThreadPos.y + offset);
     }
 
-    disparity(gThreadPos.y - windowRad, gThreadPos.x - windowRad) = bestDisparity;
+    for (int disp = minDisparity; disp <= maxDisparity; disp++) {
+        // Left side
+        for (int i = 0; i < STEPS; i++) {
+            int offset = -1 * int(windowRad) + i * windowRad;
+            imLeft = imLeftA[i];
+            imRight =
+                tex2D(textureRight, gThreadPos.x - int(windowRad) + disp, gThreadPos.y + offset);
+            //rawCost = roundf(__powf(imLeft - imRight, 2.f));
+            rawCost = fabsf(imLeft - imRight);
+            diffs(sThreadPos.y + offset, sThreadPos.x - int(windowRad)) = rawCost;
+        }
+
+        // Right side
+        for (int i = 0; i < STEPS; i++) {
+            int offset = -1 * int(windowRad) + i * windowRad;
+            if (threadIdx.x < 2 * windowRad) {
+                imLeft = imLeftB[i];
+                imRight = tex2D(textureRight,
+                                gThreadPos.x - int(windowRad) + blockDim.x + disp,
+                                gThreadPos.y + offset);
+                //rawCost = roundf(__powf(imLeft - imRight, 2.f));
+                rawCost = fabsf(imLeft - imRight);
+                diffs(sThreadPos.y + offset, sThreadPos.x - int(windowRad) + blockDim.x) =
+                    rawCost;
+            }
+        }
+
+        __syncthreads();
+
+        // Sum cost horizontally
+        for (int j = 0; j < STEPS; j++) {
+            int offset = -1 * int(windowRad) + j * windowRad;
+            rawCost = 0;
+
+            for (int i = -1 * int(windowRad); i <= windowRad; i++) {
+                rawCost += diffs(sThreadPos.y + offset, sThreadPos.x + i);
+            }
+
+            __syncthreads();
+            diffs(sThreadPos.y + offset, sThreadPos.x) = rawCost;
+            __syncthreads();
+        }
+
+        // Sum cost vertically
+        rawCost = 0;
+
+        for (int i = -1 * int(windowRad); i <= windowRad; i++) {
+            rawCost += diffs(sThreadPos.y + i, sThreadPos.x);
+        }
+
+        // Determine if rawCost is better than the previous best
+        if (rawCost < bestCost) {
+            bestCost = rawCost;
+            bestDisparity = disp + 8;
+        }
+
+        __syncthreads();
+    }
+
+    if (gThreadPos.y < imgLeft.cols && gThreadPos.x < imgLeft.rows) {
+        disparity(gThreadPos.y, gThreadPos.x) = bestDisparity;
+    }
 }
 
 // CUDA stream callback
@@ -156,52 +160,71 @@ void cuda::disparitySSD(const cv::Mat& left,
                         const size_t minDisparity,
                         const size_t maxDisparity,
                         cv::Mat& disparity) {
-    static constexpr size_t TILE_SIZE_X = 64;
-    static constexpr size_t TILE_SIZE_Y = 1;
+    // Don't really want to deal with templating this right now
+    assert(left.type() == CV_32FC1 && right.type() == CV_32FC1);
+
+    static constexpr size_t TILE_SIZE_X = 32;
+    static constexpr size_t TILE_SIZE_Y = 8;
 
     // Set up file loggers
     auto logger = spdlog::get("file_logger");
     logger->info("Setting up CUDA kernel execution...");
-    logger->info("Padding input images with {} pixels", windowRad);
-    cv::Mat leftPadded, rightPadded;
-    // Hacky way to use right image as reference frame vs the left - just make the left padded image
-    // out of the right
-    cv::copyMakeBorder((frame == ReferenceFrame::LEFT ? left : right),
-                       leftPadded,
-                       windowRad,
-                       windowRad,
-                       windowRad,
-                       windowRad,
-                       cv::BORDER_REPLICATE);
-    cv::copyMakeBorder((frame == ReferenceFrame::LEFT ? right : left),
-                       rightPadded,
-                       windowRad,
-                       windowRad,
-                       windowRad,
-                       windowRad,
-                       cv::BORDER_REPLICATE);
-    logger->info("Original image: rows={} cols={}; new image: rows={} cols={}",
-                 left.rows,
-                 left.cols,
-                 leftPadded.rows,
-                 leftPadded.cols);
+    logger->info("Original image: rows={} cols={}", left.rows, left.cols);
 
     disparity.create(cv::Size(left.rows, left.cols), CV_8SC1);
 
     // Copy to GPU memory. cv::GpuMat::upload() calls are blocking, so copy in CUDA streams
-    cv::cuda::GpuMat d_left, d_right, d_leftPadded, d_rightPadded, d_disparity;
+    cv::cuda::GpuMat d_left, d_right, d_disparity;
     cv::cuda::Stream cpyStream;
     cpyStream.enqueueHostCallback(checkCopySuccess, NULL);
 
-    d_leftPadded.upload(leftPadded, cpyStream);
-    d_rightPadded.upload(rightPadded, cpyStream);
+    d_left.create(left.rows, left.cols, left.type());
+    d_right.create(right.rows, right.cols, right.type());
+    d_disparity.create(disparity.rows, disparity.cols, disparity.type());
+    d_left.upload(left, cpyStream);
+    d_right.upload(right, cpyStream);
     d_disparity.upload(disparity, cpyStream);
+
+    // Set up texture memory
+    /*cudaChannelFormatDesc caDesc0 = cudaCreateChannelDesc<float>();
+    cudaChannelFormatDesc caDesc1 = cudaCreateChannelDesc<float>();
+    // Make texture memory clamp out-of-bounds indices
+    textureLeft.addressMode[0] = cudaAddressModeClamp;
+    textureLeft.addressMode[1] = cudaAddressModeClamp;
+    textureLeft.filterMode = cudaFilterModePoint;
+    textureLeft.normalized = false;
+    textureRight.addressMode[0] = cudaAddressModeClamp;
+    textureRight.addressMode[1] = cudaAddressModeClamp;
+    textureRight.filterMode = cudaFilterModePoint;
+    textureRight.normalized = false;
+
+    float* buffer;
+    static constexpr size_t N = 1024;
+    checkCudaErrors(cudaMalloc(&buffer, N * sizeof(float)));
+    cudaResourceDesc resDesc;
+    memset(&resDesc, 0, sizeof(resDesc));
+    resDesc.resType = cudaResourceTypeLinear;
+    resDesc.res.linear.devPtr = buffer;
+    resDesc.res.linear.desc.f = cudaChannelFormatKindFloat;
+    resDesc.res.linear.desc.x = 32;
+    resDesc.res.linear.sizeInBytes = N * sizeof(float);
+
+    cudaTextureDesc texDesc;
+    memset(&texDesc, 0, sizeof(texDesc));
+    texDesc.readMode = cudaReadModeElementType;
+
+    cudaTextureObject_t tex = 0;
+    cudaCreateTextureObject(&tex, &resDesc, &texDesc, NULL);*/
+
+    cv::cuda::device::bindTexture<float>(&textureLeft, d_left);
+    cv::cuda::device::bindTexture<float>(&textureRight, d_right);
 
     // Determine block and grid size
     dim3 blocks(max(1, (unsigned int)ceil(float(left.cols) / float(TILE_SIZE_X))),
                 max(1, (unsigned int)ceil(float(left.rows) / float(TILE_SIZE_Y))));
     dim3 threads(TILE_SIZE_X, TILE_SIZE_Y);
-    size_t shmSize = 2 * ((TILE_SIZE_X + 2 * windowRad) * (1 + 2 * windowRad)) * sizeof(float);
+    size_t shmSize =
+        ((TILE_SIZE_X + 2 * windowRad) * (TILE_SIZE_Y + 2 * windowRad)) * sizeof(char);
 
     // Time kernel execution
     logger->info("Launching disparitySSDKernel");
@@ -210,7 +233,7 @@ void cuda::disparitySSD(const cv::Mat& left,
 
     disparitySSDKernel<float, unsigned char>
         <<<blocks, threads, shmSize, cv::cuda::StreamAccessor::getStream(cpyStream)>>>(
-            d_leftPadded, d_rightPadded, frame, windowRad, minDisparity, maxDisparity, d_disparity);
+            d_left, d_right, frame, windowRad, minDisparity, maxDisparity, d_disparity);
 
     cudaDeviceSynchronize();
     checkCudaErrors(cudaGetLastError());
