@@ -8,12 +8,19 @@ enum class ReferenceFrame { LEFT, RIGHT };
 
 // Parallelized implementation of disparity using sum-of-squared-differences.
 namespace cuda {
-
-// Compute disparity with sum of squared differences. This overload is intended to be called by host
-// code.
+/**
+ * \brief Compute disparity on GPU with sum-of-squared-differences.
+ * \param left "reference" image
+ * \param right target image to compare against
+ * \param windowRad Radius of the summing window, e.g. 5 = 11x11 window
+ * \param minDisparity Minimum disparity value. Should be negative if a left side image is used as
+ *        a reference image.
+ * \param maxDisparity Maximum disparity value. Should be positive if a right side image is used as
+ *        a reference image.
+ * \param disparity Output disparity matrix.
+ */
 void disparitySSD(const cv::Mat& left,
                   const cv::Mat& right,
-                  const ReferenceFrame frame,
                   const size_t windowRad,
                   const size_t minDisparity,
                   const size_t maxDisparity,
@@ -21,9 +28,19 @@ void disparitySSD(const cv::Mat& left,
 }; // namespace cuda
 
 namespace serial {
+/**
+ * \brief Compute disparity on CPU with sum-of-squared-differences.
+ * \param left "reference" image
+ * \param right target image to compare against
+ * \param windowRad Radius of the summing window, e.g. 5 = 11x11 window
+ * \param minDisparity Minimum disparity value. Should be negative if a left side image is used as
+ *        a reference image.
+ * \param maxDisparity Maximum disparity value. Should be positive if a right side image is used as
+ *        a reference image.
+ * \param disparity Output disparity matrix.
+ */
 void disparitySSD(const cv::Mat& left,
                   const cv::Mat& right,
-                  const ReferenceFrame frame,
                   const size_t windowRad,
                   const size_t minDisparity,
                   const size_t maxDisparity,

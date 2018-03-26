@@ -20,6 +20,14 @@ Config::Images::Images(const YAML::Node& imagesNode) {
     _configDone = loadSuccess;
 }
 
+Config::DisparitySSD::DisparitySSD(const YAML::Node& ssdNode) {
+    bool loadSuccess = true;
+    loadSuccess = loadParam(ssdNode, "window_radius", _windowRadius);
+    loadSuccess = loadParam(ssdNode, "disparity_range", _disparityRange);
+
+    _configDone = loadSuccess;
+}
+
 bool Config::Images::loadImgPair(const YAML::Node& node,
                                  const std::string& keyLeft,
                                  const std::string& keyRight,
@@ -88,10 +96,34 @@ bool Config::loadConfig(const YAML::Node& config) {
         _logger->info("Using GPU for disparity computation");
     }
 
+    if (YAML::Node ssdNode = config["problem_1_ssd"]) {
+        _p1ssd = DisparitySSD(ssdNode);
+    }
+
+    if (YAML::Node ssdNode = config["problem_2_ssd"]) {
+        _p2ssd = DisparitySSD(ssdNode);
+    }
+
+    if (YAML::Node ssdNode = config["problem_3_ssd"]) {
+        _p3ssd = DisparitySSD(ssdNode);
+    }
+
     bool configSuccess = true;
     // Verify that configurations were successful
     if (!_images.configDone()) {
         _logger->error("Loading images failed!");
+        configSuccess = false;
+    }
+    if (!_p1ssd.configDone()) {
+        _logger->error("Loading Problem 1 parameters failed!");
+        configSuccess = false;
+    }
+    if (!_p2ssd.configDone()) {
+        _logger->error("Loading Problem 2 parameters failed!");
+        configSuccess = false;
+    }
+    if (!_p3ssd.configDone()) {
+        _logger->error("Loading Problem 3 parameters failed!");
         configSuccess = false;
     }
 

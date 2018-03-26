@@ -55,8 +55,10 @@ if(CUDA_FOUND)
     endif()
   endif()
 
-  # add debugging to CUDA NVCC flags.  For NVidia's NSight tools.
-  set(CUDA_NVCC_FLAGS_DEBUG ${CUDA_NVCC_FLAGS_DEBUG} "-G")
+  if(CMAKE_BUILD_TYPE MATCHES Debug)
+    # add debugging to CUDA NVCC flags.  For NVidia's NSight tools.
+    set(CUDA_NVCC_FLAGS_DEBUG ${CUDA_NVCC_FLAGS_DEBUG} "-G")
+  endif()
 
   add_subdirectory (ProblemSets)
 

@@ -1,9 +1,12 @@
 #include "../include/Config.h"
 #include "../include/DisparitySSD.h"
 
+#include <common/CudaWarmup.h>
+
 #include <spdlog/spdlog.h>
 
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <chrono>
 #include <memory>
@@ -23,34 +26,211 @@ void runProblem1(const Config& config) {
     config._images._pair0.first.convertTo(left, CV_32FC1);
     config._images._pair0.second.convertTo(right, CV_32FC1);
 
+    // Left side is reference
     if (!config._useGpuDisparity) {
-        serial::disparitySSD(left, right, ReferenceFrame::LEFT, 6, 0, 3, disparity);
-        // Normalize for display
-        cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-        cv::imwrite(config._outputPathPrefix + "/ps2-1-a-1.png", disparity);
-        disparity = 0;
-        serial::disparitySSD(left, right, ReferenceFrame::RIGHT, 6, 0, 3, disparity);
-        // Normalize for display
-        cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-        cv::imwrite(config._outputPathPrefix + "/ps2-1-a-2.png", disparity);
+        // Run CPU version
+        serial::disparitySSD(
+            left, right, config._p1ssd._windowRadius, -config._p1ssd._disparityRange, 0, disparity);
     } else {
         // Run CUDA version
-        disparity = 0;
-        cuda::disparitySSD(left, right, ReferenceFrame::LEFT, 10, -3, 0, disparity);
-        // Normalize for display
-        cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-        cv::imwrite(config._outputPathPrefix + "/ps2-1-a-1.png", disparity);
-        disparity = 0;
-        cuda::disparitySSD(right, left, ReferenceFrame::RIGHT, 8, 0, 5, disparity);
-        // Normalize for display
-        cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-        cv::imwrite(config._outputPathPrefix + "/ps2-1-a-2.png", disparity);
+        cuda::disparitySSD(
+            left, right, config._p1ssd._windowRadius, -config._p1ssd._disparityRange, 0, disparity);
     }
+    // Normalize for display
+    cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    cv::imwrite(config._outputPathPrefix + "/ps2-1-a-1.png", disparity);
+
+    // Right side is reference
+    disparity = 0;
+    if (!config._useGpuDisparity) {
+        serial::disparitySSD(
+            right, left, config._p1ssd._windowRadius, 0, config._p1ssd._disparityRange, disparity);
+    } else {
+        cuda::disparitySSD(
+            right, left, config._p1ssd._windowRadius, 0, config._p1ssd._disparityRange, disparity);
+    }
+    // Normalize for display
+    cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    cv::imwrite(config._outputPathPrefix + "/ps2-1-a-2.png", disparity);
 
     // Record end time
     auto finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> runtime = finish - start;
     _logger->info("Problem 1 runtime = {} ms", runtime.count());
+}
+
+void runProblem2(const Config& config) {
+    // Time runtime
+    _logger->info("Problem 2 begins");
+    auto start = std::chrono::high_resolution_clock::now();
+
+    // Convert images to greyscale floating point
+    cv::Mat left, right, disparity;
+    cv::cvtColor(config._images._pair1.first, left, cv::COLOR_RGB2GRAY, 1);
+    left.convertTo(left, CV_32FC1);
+    cv::cvtColor(config._images._pair1.second, right, cv::COLOR_RGB2GRAY, 1);
+    right.convertTo(right, CV_32FC1);
+
+    // Left side is reference
+    if (!config._useGpuDisparity) {
+        // Run CPU version
+        serial::disparitySSD(
+            left, right, config._p2ssd._windowRadius, -config._p2ssd._disparityRange, 0, disparity);
+    } else {
+        // Run CUDA version
+        cuda::disparitySSD(
+            left, right, config._p2ssd._windowRadius, -config._p2ssd._disparityRange, 0, disparity);
+    }
+    // Normalize for display
+    cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    cv::imwrite(config._outputPathPrefix + "/ps2-2-a-1.png", disparity);
+    // Invert colors, since darker means further away but we have negative disparity values
+    cv::Mat ones = cv::Mat::ones(disparity.size(), disparity.type()) * 255;
+    disparity = ones - disparity;
+    cv::imwrite(config._outputPathPrefix + "/ps2-2-a-1-inverted.png", disparity);
+
+    // Right side is reference
+    disparity = 0;
+    if (!config._useGpuDisparity) {
+        serial::disparitySSD(
+            right, left, config._p2ssd._windowRadius, 0, config._p2ssd._disparityRange, disparity);
+    } else {
+        cuda::disparitySSD(
+            right, left, config._p2ssd._windowRadius, 0, config._p2ssd._disparityRange, disparity);
+    }
+    // Normalize for display
+    cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    cv::imwrite(config._outputPathPrefix + "/ps2-2-a-2.png", disparity);
+
+    // Record end time
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> runtime = finish - start;
+    _logger->info("Problem 2 runtime = {} ms", runtime.count());
+}
+
+void runProblem3(const Config& config) {
+    // Time runtime
+    _logger->info("Problem 3 begins");
+    auto start = std::chrono::high_resolution_clock::now();
+
+    // Convert images to greyscale floating point
+    cv::Mat left, right, disparity;
+    cv::cvtColor(config._images._pair1.first, left, cv::COLOR_RGB2GRAY, 1);
+    left.convertTo(left, CV_32FC1);
+    cv::cvtColor(config._images._pair1.second, right, cv::COLOR_RGB2GRAY, 1);
+    right.convertTo(right, CV_32FC1);
+
+    // Add noise
+    cv::Mat noise(left.size(), left.type());
+    float mean = 0;
+    float sigma = 10;
+    cv::randn(noise, mean, sigma);
+    cv::Mat leftNoisy = left + noise;
+    cv::randn(noise, mean, sigma);
+    cv::Mat rightNoisy = right + noise;
+
+    // Left side is reference
+    if (!config._useGpuDisparity) {
+        // Run CPU version
+        serial::disparitySSD(leftNoisy,
+                             rightNoisy,
+                             config._p3ssd._windowRadius,
+                             -config._p3ssd._disparityRange,
+                             0,
+                             disparity);
+    } else {
+        // Run CUDA version
+        cuda::disparitySSD(leftNoisy,
+                           rightNoisy,
+                           config._p3ssd._windowRadius,
+                           -config._p3ssd._disparityRange,
+                           0,
+                           disparity);
+    }
+    // Normalize for display
+    cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    cv::imwrite(config._outputPathPrefix + "/ps2-3-a-1.png", disparity);
+    // Invert colors, since darker means further away but we have negative disparity values
+    cv::Mat ones = cv::Mat::ones(disparity.size(), disparity.type()) * 255;
+    disparity = ones - disparity;
+    cv::imwrite(config._outputPathPrefix + "/ps2-3-a-1-inverted.png", disparity);
+
+    // Right side is reference
+    disparity = 0;
+    if (!config._useGpuDisparity) {
+        serial::disparitySSD(rightNoisy,
+                             leftNoisy,
+                             config._p3ssd._windowRadius,
+                             0,
+                             config._p3ssd._disparityRange,
+                             disparity);
+    } else {
+        cuda::disparitySSD(rightNoisy,
+                           leftNoisy,
+                           config._p3ssd._windowRadius,
+                           0,
+                           config._p3ssd._disparityRange,
+                           disparity);
+    }
+    // Normalize for display
+    cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    cv::imwrite(config._outputPathPrefix + "/ps2-3-a-2.png", disparity);
+
+    //-------------- Part 2: Increasing contrast instead of adding noise --------------
+    float contrastFactor = 1.1;
+    cv::Mat leftContrasty = left * contrastFactor;
+    cv::Mat rightContrasty = right * contrastFactor;
+
+    // Left side is reference
+    if (!config._useGpuDisparity) {
+        // Run CPU version
+        serial::disparitySSD(leftContrasty,
+                             rightContrasty,
+                             config._p3ssd._windowRadius,
+                             -config._p3ssd._disparityRange,
+                             0,
+                             disparity);
+    } else {
+        // Run CUDA version
+        cuda::disparitySSD(leftContrasty,
+                           rightContrasty,
+                           config._p3ssd._windowRadius,
+                           -config._p3ssd._disparityRange,
+                           0,
+                           disparity);
+    }
+    // Normalize for display
+    cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    cv::imwrite(config._outputPathPrefix + "/ps2-3-b-1.png", disparity);
+    // Invert colors, since darker means further away but we have negative disparity values
+    disparity = ones - disparity;
+    cv::imwrite(config._outputPathPrefix + "/ps2-3-b-1-inverted.png", disparity);
+
+    // Right side is reference
+    disparity = 0;
+    if (!config._useGpuDisparity) {
+        serial::disparitySSD(rightContrasty,
+                             leftContrasty,
+                             config._p3ssd._windowRadius,
+                             0,
+                             config._p3ssd._disparityRange,
+                             disparity);
+    } else {
+        cuda::disparitySSD(rightContrasty,
+                           leftContrasty,
+                           config._p3ssd._windowRadius,
+                           0,
+                           config._p3ssd._disparityRange,
+                           disparity);
+    }
+    // Normalize for display
+    cv::normalize(disparity, disparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    cv::imwrite(config._outputPathPrefix + "/ps2-3-b-2.png", disparity);
+
+    // Record end time
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> runtime = finish - start;
+    _logger->info("Problem 3 runtime = {} ms", runtime.count());
 }
 
 int main() {
@@ -67,5 +247,15 @@ int main() {
 
     Config config(CONFIG_FILE_PATH);
 
+    // If we're using the GPU, warm it up by running a small kernel that does nothing. Required for
+    // accurate timing data.
+    if (config._useGpuDisparity) {
+        common::warmup();
+        _fileLogger->info("GPU warmup done");
+    }
+
+    // Run problems
     runProblem1(config);
+    runProblem2(config);
+    runProblem3(config);
 }

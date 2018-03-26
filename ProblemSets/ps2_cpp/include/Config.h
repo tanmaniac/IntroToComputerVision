@@ -25,7 +25,7 @@ private:
                 val = node[key].as<T>();
                 return true;
             }
-            auto tmpLogger = spdlog::get(_loggerName);
+            auto tmpLogger = spdlog::get("logger");
             tmpLogger->error("Could not load param \"{}\"", key);
             return false;
         }
@@ -51,10 +51,17 @@ public:
                          std::pair<cv::Mat, cv::Mat>& imgs);
     };
 
-    const std::string _loggerName = "logger";
+    struct DisparitySSD : BasicConfig {
+        size_t _windowRadius;
+        size_t _disparityRange;
+
+        DisparitySSD() = default;
+        DisparitySSD(const YAML::Node& ssdNode);
+    };
 
     Images _images;
     bool _useGpuDisparity = false;
+    DisparitySSD _p1ssd, _p2ssd, _p3ssd;
 
     std::string _outputPathPrefix;
 

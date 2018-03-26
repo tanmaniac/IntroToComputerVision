@@ -16,6 +16,17 @@ output_dir: ./ps2_output
 use_gpu_disparity: true
 
 # Problem 1 settings
-problem_1:
-  ssd_window_size: 5
+problem_1_ssd:
+  window_radius: 6
+  disparity_range: 3
+
+# Problem 2 settings
+problem_2_ssd:
+  window_radius: 7
+  disparity_range: 95
+
+# Problem 3 settings
+problem_3_ssd:
+  window_radius: 7
+  disparity_range: 95
 ...
