@@ -2,17 +2,16 @@
 
 #include <spdlog/spdlog.h>
 
-#include <opencv2/highgui/highgui.hpp>
-
 #include <cmath>
 #include <iostream>
 
 void serial::disparitySSD(const cv::Mat& left,
                           const cv::Mat& right,
                           const size_t windowRad,
-                          const size_t minDisparity,
-                          const size_t maxDisparity,
+                          const int minDisparity,
+                          const int maxDisparity,
                           cv::Mat& disparity) {
+    assert(left.type() == CV_32FC1 && right.type() == CV_32FC1);
     // Set up file loggers
     auto logger = spdlog::get("file_logger");
     logger->info("Padding input images with {} pixels", windowRad);
@@ -22,7 +21,7 @@ void serial::disparitySSD(const cv::Mat& left,
     cv::copyMakeBorder(
         right, rightPadded, windowRad, windowRad, windowRad, windowRad, cv::BORDER_REPLICATE);
 
-    logger->info("Original image: rows={} cols={}; new image: rows={} cols={}",
+    logger->info("Original image: rows={} cols={}; padded image: rows={} cols={}",
                  left.rows,
                  left.cols,
                  leftPadded.rows,
@@ -43,11 +42,10 @@ void serial::disparitySSD(const cv::Mat& left,
             for (searchIndex; searchIndex <= maxSearchIndex; searchIndex++) {
                 int sum = 0;
                 // Iterate over the window and compute sum of squared differences
-                for (int winY = -windowRad; winY <= int(windowRad); winY++) {
-                    for (int winX = -windowRad; winX <= int(windowRad); winX++) {
+                for (int winY = -1 * int(windowRad); winY <= int(windowRad); winY++) {
+                    for (int winX = -1 * int(windowRad); winX <= int(windowRad); winX++) {
                         float rawCost = leftPadded.at<float>(y + winY, x + winX) -
                                         rightPadded.at<float>(y + winY, searchIndex + winX);
-                        // logger->info("rawCost = {}", rawCost);
                         sum += round(rawCost * rawCost);
                     }
                 }
@@ -56,7 +54,7 @@ void serial::disparitySSD(const cv::Mat& left,
                     bestDisparity = searchIndex - x;
                 }
             }
-            disparity.at<unsigned char>(y - windowRad, x - windowRad) = bestDisparity;
+            disparity.at<char>(y - windowRad, x - windowRad) = bestDisparity;
         }
     }
 }

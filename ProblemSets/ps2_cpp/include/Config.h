@@ -61,7 +61,7 @@ public:
 
     Images _images;
     bool _useGpuDisparity = false;
-    DisparitySSD _p1ssd, _p2ssd, _p3ssd;
+    DisparitySSD _p1disp, _p2disp, _p3disp, _p4disp, _p5disp;
 
     std::string _outputPathPrefix;
 

@@ -93,19 +93,27 @@ bool Config::loadConfig(const YAML::Node& config) {
     // Should we use GPU for disparity, or just use CPU
     if (config["use_gpu_disparity"]) {
         _useGpuDisparity = config["use_gpu_disparity"].as<bool>();
-        _logger->info("Using GPU for disparity computation");
+        _logger->info("Using {} for disparity computation", _useGpuDisparity ? "GPU" : "CPU");
     }
 
     if (YAML::Node ssdNode = config["problem_1_ssd"]) {
-        _p1ssd = DisparitySSD(ssdNode);
+        _p1disp = DisparitySSD(ssdNode);
     }
 
     if (YAML::Node ssdNode = config["problem_2_ssd"]) {
-        _p2ssd = DisparitySSD(ssdNode);
+        _p2disp = DisparitySSD(ssdNode);
     }
 
     if (YAML::Node ssdNode = config["problem_3_ssd"]) {
-        _p3ssd = DisparitySSD(ssdNode);
+        _p3disp = DisparitySSD(ssdNode);
+    }
+
+    if (YAML::Node ssdNode = config["problem_4_ncorr"]) {
+        _p4disp = DisparitySSD(ssdNode);
+    }
+
+    if (YAML::Node node = config["problem_5_ncorr"]) {
+        _p5disp = DisparitySSD(node);
     }
 
     bool configSuccess = true;
@@ -114,16 +122,24 @@ bool Config::loadConfig(const YAML::Node& config) {
         _logger->error("Loading images failed!");
         configSuccess = false;
     }
-    if (!_p1ssd.configDone()) {
+    if (!_p1disp.configDone()) {
         _logger->error("Loading Problem 1 parameters failed!");
         configSuccess = false;
     }
-    if (!_p2ssd.configDone()) {
+    if (!_p2disp.configDone()) {
         _logger->error("Loading Problem 2 parameters failed!");
         configSuccess = false;
     }
-    if (!_p3ssd.configDone()) {
+    if (!_p3disp.configDone()) {
         _logger->error("Loading Problem 3 parameters failed!");
+        configSuccess = false;
+    }
+    if (!_p4disp.configDone()) {
+        _logger->error("Loading Problem 4 parameters failed!");
+        configSuccess = false;
+    }
+    if (!_p5disp.configDone()) {
+        _logger->error("Loading Problem 5 parameters failed!");
         configSuccess = false;
     }
 

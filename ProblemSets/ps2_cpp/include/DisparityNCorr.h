@@ -2,10 +2,11 @@
 
 #include <opencv2/core/core.hpp>
 
-// Parallelized implementation of disparity using sum-of-squared-differences.
+// Functions for computing disparity using normalized correlation
+
 namespace cuda {
 /**
- * \brief Compute disparity on GPU with sum-of-squared-differences.
+ * \brief Computes disparity between two images using normalized correlation.
  * \param left "reference" image
  * \param right target image to compare against
  * \param windowRad Radius of the summing window, e.g. 5 = 11x11 window
@@ -15,17 +16,17 @@ namespace cuda {
  *        a reference image.
  * \param disparity Output disparity matrix.
  */
-void disparitySSD(const cv::Mat& left,
-                  const cv::Mat& right,
-                  const size_t windowRad,
-                  const int minDisparity,
-                  const int maxDisparity,
-                  cv::Mat& disparity);
+void disparityNCorr(const cv::Mat& left,
+                    const cv::Mat& right,
+                    const size_t windowRad,
+                    const int minDisparity,
+                    const int maxDisparity,
+                    cv::Mat& disparity);
 }; // namespace cuda
 
 namespace serial {
 /**
- * \brief Compute disparity on CPU with sum-of-squared-differences.
+ * \brief Computes disparity between two images using normalized correlation.
  * \param left "reference" image
  * \param right target image to compare against
  * \param windowRad Radius of the summing window, e.g. 5 = 11x11 window
@@ -35,10 +36,10 @@ namespace serial {
  *        a reference image.
  * \param disparity Output disparity matrix.
  */
-void disparitySSD(const cv::Mat& left,
-                  const cv::Mat& right,
-                  const size_t windowRad,
-                  const int minDisparity,
-                  const int maxDisparity,
-                  cv::Mat& disparity);
+void disparityNCorr(const cv::Mat& left,
+                    const cv::Mat& right,
+                    const size_t windowRad,
+                    const int minDisparity,
+                    const int maxDisparity,
+                    cv::Mat& disparity);
 }; // namespace serial

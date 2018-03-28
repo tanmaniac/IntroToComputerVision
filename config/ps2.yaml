@@ -29,4 +29,14 @@ problem_2_ssd:
 problem_3_ssd:
   window_radius: 7
   disparity_range: 95
+
+# Problem 4 settings
+problem_4_ncorr:
+  window_radius: 7
+  disparity_range: 95
+
+# Problem 5 settings
+problem_5_ncorr:
+  window_radius: 7
+  disparity_range: 95
 ...

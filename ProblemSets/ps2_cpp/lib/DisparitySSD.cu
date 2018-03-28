@@ -1,4 +1,5 @@
 #include <common/GpuTimer.h>
+#include <common/Utils.h>
 #include <common/CudaCommon.cuh>
 #include "../include/DisparitySSD.h"
 
@@ -8,7 +9,6 @@
 #include <opencv2/core/cuda.hpp>
 #include <opencv2/core/cuda/common.hpp>
 #include <opencv2/core/cuda_stream_accessor.hpp>
-//#include <opencv2/cudev/ptr2d/texture.hpp>
 #include <opencv2/core/opengl.hpp>
 
 // Minimum SSD value required to be counted as a disparity point
@@ -139,27 +139,11 @@ __global__ void disparitySSDKernel(const cv::cuda::PtrStepSz<srcType> imgLeft,
     }
 }
 
-// CUDA stream callback
-void checkCopySuccess(int status, void* userData) {
-    auto logger = spdlog::get("file_logger");
-    if (status == cudaSuccess) {
-        logger->info("Stream successfully copied data to GPU");
-    } else {
-        logger->error("Stream copy failed!");
-    }
-}
-
-// Compute block size by dividing two numbers and round up, clipping the minimum output to 1.
-template <typename numType, typename denomType>
-size_t divRoundUp(const numType num, const denomType denom) {
-    return max(size_t(1), size_t(ceil(float(num) / float(denom))));
-}
-
 void cuda::disparitySSD(const cv::Mat& left,
                         const cv::Mat& right,
                         const size_t windowRad,
-                        const size_t minDisparity,
-                        const size_t maxDisparity,
+                        const int minDisparity,
+                        const int maxDisparity,
                         cv::Mat& disparity) {
     // Don't really want to deal with templating this right now
     assert(left.type() == CV_32FC1 && right.type() == CV_32FC1);
@@ -178,7 +162,7 @@ void cuda::disparitySSD(const cv::Mat& left,
     cv::cuda::GpuMat d_left, d_right, d_disparity, d_disparityMinSSD;
     cv::cuda::Stream cpyStream;
     // Set up a callback to log a confirmation that the stream copy has completed
-    cpyStream.enqueueHostCallback(checkCopySuccess, nullptr);
+    cpyStream.enqueueHostCallback(common::checkCopySuccess, nullptr);
 
     // Allocate GPU memory
     // Note that I don't use createContinuous since the texture binding operations required pitched
@@ -197,7 +181,8 @@ void cuda::disparitySSD(const cv::Mat& left,
     cv::cuda::device::bindTexture<float>(&textureRight, d_right);
 
     // Determine block and grid size
-    dim3 blocks(divRoundUp(left.cols, TILE_SIZE_X), divRoundUp(left.rows, ROWS_PER_THREAD));
+    dim3 blocks(common::divRoundUp(left.cols, TILE_SIZE_X),
+                common::divRoundUp(left.rows, ROWS_PER_THREAD));
     dim3 threads(TILE_SIZE_X, TILE_SIZE_Y);
     size_t shmSize = (TILE_SIZE_X + 2 * windowRad) * sizeof(float);
 
