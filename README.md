@@ -45,6 +45,15 @@ cmake ..
 make -j
 ```
 
+If you want to use NVIDIA debugging tools, like `cuda-memcheck` or the NVIDIA Visual Profiler, compile with Debug flags:
+```bash
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+make -j
+```
+Note that this increases runtime of some kernels by around 100x, so only compile in debug mode if you need it.
+
+
 ## Running
 
 Build outputs are placed in the `bin` directory. All of the executables are configured with YAML files in the `config` directory. You can edit these to change the input parameters to each of the assignments. For example, with Problem Set 0, all you need to do (after building) is:

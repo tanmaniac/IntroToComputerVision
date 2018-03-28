@@ -1,0 +1,95 @@
+[2018-03-28 17:25:24.583] [logger] [info] Created output directory at "./ps2_output"
+[2018-03-28 17:25:24.583] [logger] [info] Using GPU for disparity computation
+[2018-03-28 17:25:24.584] [logger] [info] Loaded runtime configuration from "../config/ps2.yaml"
+[2018-03-28 17:25:24.668] [file_logger] [info] GPU warmup done
+[2018-03-28 17:25:24.668] [logger] [info] Problem 1 begins
+[2018-03-28 17:25:24.669] [file_logger] [info] Setting up CUDA kernel execution...
+[2018-03-28 17:25:24.669] [file_logger] [info] Original image: rows=128 cols=128
+[2018-03-28 17:25:24.674] [file_logger] [info] Stream successfully copied data to GPU
+[2018-03-28 17:25:24.674] [file_logger] [info] Launching disparitySSDKernel
+[2018-03-28 17:25:24.674] [file_logger] [info] disparitySSDKernel execution took 0.289728 ms
+[2018-03-28 17:25:24.675] [file_logger] [info] Setting up CUDA kernel execution...
+[2018-03-28 17:25:24.675] [file_logger] [info] Original image: rows=128 cols=128
+[2018-03-28 17:25:24.675] [file_logger] [info] Stream successfully copied data to GPU
+[2018-03-28 17:25:24.675] [file_logger] [info] Launching disparitySSDKernel
+[2018-03-28 17:25:24.675] [file_logger] [info] disparitySSDKernel execution took 0.256256 ms
+[2018-03-28 17:25:24.676] [logger] [info] Problem 1 runtime = 7.19401 ms
+[2018-03-28 17:25:24.676] [logger] [info] Problem 2 begins
+[2018-03-28 17:25:24.678] [file_logger] [info] Setting up CUDA kernel execution...
+[2018-03-28 17:25:24.678] [file_logger] [info] Original image: rows=511 cols=640
+[2018-03-28 17:25:24.678] [file_logger] [info] Stream successfully copied data to GPU
+[2018-03-28 17:25:24.679] [file_logger] [info] Launching disparitySSDKernel
+[2018-03-28 17:25:24.698] [file_logger] [info] disparitySSDKernel execution took 19.2812 ms
+[2018-03-28 17:25:24.699] [file_logger] [info] Setting up CUDA kernel execution...
+[2018-03-28 17:25:24.699] [file_logger] [info] Original image: rows=511 cols=640
+[2018-03-28 17:25:24.699] [file_logger] [info] Stream successfully copied data to GPU
+[2018-03-28 17:25:24.700] [file_logger] [info] Launching disparitySSDKernel
+[2018-03-28 17:25:24.719] [file_logger] [info] disparitySSDKernel execution took 18.3656 ms
+[2018-03-28 17:25:24.733] [logger] [info] Problem 2 runtime = 57.0186 ms
+[2018-03-28 17:25:24.733] [logger] [info] Problem 3 begins
+[2018-03-28 17:25:24.739] [file_logger] [info] Setting up CUDA kernel execution...
+[2018-03-28 17:25:24.739] [file_logger] [info] Original image: rows=511 cols=640
+[2018-03-28 17:25:24.739] [file_logger] [info] Stream successfully copied data to GPU
+[2018-03-28 17:25:24.740] [file_logger] [info] Launching disparitySSDKernel
+[2018-03-28 17:25:24.759] [file_logger] [info] disparitySSDKernel execution took 19.0214 ms
+[2018-03-28 17:25:24.760] [file_logger] [info] Setting up CUDA kernel execution...
+[2018-03-28 17:25:24.760] [file_logger] [info] Original image: rows=511 cols=640
+[2018-03-28 17:25:24.760] [file_logger] [info] Stream successfully copied data to GPU
+[2018-03-28 17:25:24.760] [file_logger] [info] Launching disparitySSDKernel
+[2018-03-28 17:25:24.781] [file_logger] [info] disparitySSDKernel execution took 20.0203 ms
+[2018-03-28 17:25:24.796] [file_logger] [info] Setting up CUDA kernel execution...
+[2018-03-28 17:25:24.797] [file_logger] [info] Original image: rows=511 cols=640
+[2018-03-28 17:25:24.797] [file_logger] [info] Stream successfully copied data to GPU
+[2018-03-28 17:25:24.797] [file_logger] [info] Launching disparitySSDKernel
+[2018-03-28 17:25:24.817] [file_logger] [info] disparitySSDKernel execution took 19.2763 ms
+[2018-03-28 17:25:24.818] [file_logger] [info] Setting up CUDA kernel execution...
+[2018-03-28 17:25:24.818] [file_logger] [info] Original image: rows=511 cols=640
+[2018-03-28 17:25:24.818] [file_logger] [info] Stream successfully copied data to GPU
+[2018-03-28 17:25:24.819] [file_logger] [info] Launching disparitySSDKernel
+[2018-03-28 17:25:24.839] [file_logger] [info] disparitySSDKernel execution took 20.3608 ms
+[2018-03-28 17:25:24.853] [logger] [info] Problem 3 runtime = 120.51 ms
+[2018-03-28 17:25:24.854] [logger] [info] Problem 4 begins
+[2018-03-28 17:25:24.854] [file_logger] [info] Setting up CUDA kernel execution...
+[2018-03-28 17:25:24.854] [file_logger] [info] Original image: rows=511 cols=640
+[2018-03-28 17:25:24.854] [file_logger] [info] Stream successfully copied data to GPU
+[2018-03-28 17:25:24.855] [file_logger] [info] Launching disparityNCorrKernel
+[2018-03-28 17:25:24.883] [file_logger] [info] disparityNCorrKernel execution took 27.8626 ms
+[2018-03-28 17:25:24.884] [file_logger] [info] Setting up CUDA kernel execution...
+[2018-03-28 17:25:24.884] [file_logger] [info] Original image: rows=511 cols=640
+[2018-03-28 17:25:24.884] [file_logger] [info] Stream successfully copied data to GPU
+[2018-03-28 17:25:24.885] [file_logger] [info] Launching disparityNCorrKernel
+[2018-03-28 17:25:24.914] [file_logger] [info] disparityNCorrKernel execution took 29.0395 ms
+[2018-03-28 17:25:24.932] [file_logger] [info] Setting up CUDA kernel execution...
+[2018-03-28 17:25:24.932] [file_logger] [info] Original image: rows=511 cols=640
+[2018-03-28 17:25:24.933] [file_logger] [info] Stream successfully copied data to GPU
+[2018-03-28 17:25:24.934] [file_logger] [info] Launching disparityNCorrKernel
+[2018-03-28 17:25:24.960] [file_logger] [info] disparityNCorrKernel execution took 26.1786 ms
+[2018-03-28 17:25:24.961] [file_logger] [info] Setting up CUDA kernel execution...
+[2018-03-28 17:25:24.961] [file_logger] [info] Original image: rows=511 cols=640
+[2018-03-28 17:25:24.961] [file_logger] [info] Stream successfully copied data to GPU
+[2018-03-28 17:25:24.962] [file_logger] [info] Launching disparityNCorrKernel
+[2018-03-28 17:25:24.989] [file_logger] [info] disparityNCorrKernel execution took 26.4372 ms
+[2018-03-28 17:25:25.006] [file_logger] [info] Setting up CUDA kernel execution...
+[2018-03-28 17:25:25.006] [file_logger] [info] Original image: rows=511 cols=640
+[2018-03-28 17:25:25.006] [file_logger] [info] Stream successfully copied data to GPU
+[2018-03-28 17:25:25.006] [file_logger] [info] Launching disparityNCorrKernel
+[2018-03-28 17:25:25.033] [file_logger] [info] disparityNCorrKernel execution took 26.2087 ms
+[2018-03-28 17:25:25.034] [file_logger] [info] Setting up CUDA kernel execution...
+[2018-03-28 17:25:25.034] [file_logger] [info] Original image: rows=511 cols=640
+[2018-03-28 17:25:25.034] [file_logger] [info] Stream successfully copied data to GPU
+[2018-03-28 17:25:25.035] [file_logger] [info] Launching disparityNCorrKernel
+[2018-03-28 17:25:25.061] [file_logger] [info] disparityNCorrKernel execution took 26.4397 ms
+[2018-03-28 17:25:25.075] [logger] [info] Problem 4 runtime = 220.962 ms
+[2018-03-28 17:25:25.075] [logger] [info] Problem 5 begins
+[2018-03-28 17:25:25.075] [file_logger] [info] Setting up CUDA kernel execution...
+[2018-03-28 17:25:25.075] [file_logger] [info] Original image: rows=529 cols=640
+[2018-03-28 17:25:25.076] [file_logger] [info] Stream successfully copied data to GPU
+[2018-03-28 17:25:25.076] [file_logger] [info] Launching disparityNCorrKernel
+[2018-03-28 17:25:25.099] [file_logger] [info] disparityNCorrKernel execution took 22.4994 ms
+[2018-03-28 17:25:25.100] [file_logger] [info] Setting up CUDA kernel execution...
+[2018-03-28 17:25:25.100] [file_logger] [info] Original image: rows=529 cols=640
+[2018-03-28 17:25:25.100] [file_logger] [info] Stream successfully copied data to GPU
+[2018-03-28 17:25:25.101] [file_logger] [info] Launching disparityNCorrKernel
+[2018-03-28 17:25:25.122] [file_logger] [info] disparityNCorrKernel execution took 21.1715 ms
+[2018-03-28 17:25:25.135] [logger] [info] Problem 5 runtime = 60.4144 ms
+[2018-03-28 17:25:25.135] [logger] [info] Total runtime: 467.038 ms

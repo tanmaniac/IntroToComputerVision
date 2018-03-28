@@ -1,0 +1,42 @@
+---
+# Problem Set 2 configuration
+images:
+  pair0-L: ../Resources/ProblemSet2/pair0-L.png
+  pair0-R: ../Resources/ProblemSet2/pair0-R.png
+  pair1-L: ../Resources/ProblemSet2/pair1-L.png
+  pair1-R: ../Resources/ProblemSet2/pair1-R.png
+  pair2-L: ../Resources/ProblemSet2/pair2-L.png
+  pair2-R: ../Resources/ProblemSet2/pair2-R.png
+  pair1-GT-L: ../Resources/ProblemSet2/pair1-D_L.png
+  pair1-GT-R: ../Resources/ProblemSet2/pair1-D_R.png
+  pair2-GT-L: ../Resources/ProblemSet2/pair2-D_L.png
+  pair2-GT-R: ../Resources/ProblemSet2/pair2-D_R.png
+
+output_dir: ./ps2_output
+use_gpu_disparity: true
+
+# Problem 1 settings
+problem_1_ssd:
+  window_radius: 6
+  disparity_range: 3
+
+# Problem 2 settings
+problem_2_ssd:
+  window_radius: 7
+  disparity_range: 95
+
+# Problem 3 settings
+problem_3_ssd:
+  window_radius: 7
+  disparity_range: 95
+
+# Problem 4 settings
+problem_4_ncorr:
+  window_radius: 7
+  disparity_range: 95
+
+# Problem 5 settings
+problem_5_ncorr:
+  window_radius: 7
+  disparity_range: 80
+...
