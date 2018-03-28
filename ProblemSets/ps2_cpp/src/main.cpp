@@ -293,6 +293,39 @@ void runProblem4(const Config& config) {
     _logger->info("Problem 4 runtime = {} ms", runtime.count());
 }
 
+void runProblem5(const Config& config) {
+    // Time runtime
+    _logger->info("Problem 5 begins");
+    auto start = std::chrono::high_resolution_clock::now();
+
+    // Convert images to greyscale floating point
+    cv::Mat left, right, leftDisparity, rightDisparity;
+    cv::cvtColor(config._images._pair2.first, left, cv::COLOR_RGB2GRAY, 1);
+    left.convertTo(left, CV_32FC1);
+    cv::cvtColor(config._images._pair2.second, right, cv::COLOR_RGB2GRAY, 1);
+    right.convertTo(right, CV_32FC1);
+
+    disparityNCorrPair(
+        left, right, config._useGpuDisparity, config._p5disp, leftDisparity, rightDisparity);
+
+    // Normalize for display
+    cv::normalize(leftDisparity, leftDisparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    cv::imwrite(config._outputPathPrefix + "/ps2-5-a-1.png", leftDisparity);
+    // Invert colors, since darker means further away but we have negative disparity values
+    cv::Mat ones = cv::Mat::ones(leftDisparity.size(), leftDisparity.type()) * 255;
+    leftDisparity = ones - leftDisparity;
+    cv::imwrite(config._outputPathPrefix + "/ps2-5-a-1-inverted.png", leftDisparity);
+
+    // Normalize for display
+    cv::normalize(rightDisparity, rightDisparity, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+    cv::imwrite(config._outputPathPrefix + "/ps2-5-a-2.png", rightDisparity);
+
+    // Record end time
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> runtime = finish - start;
+    _logger->info("Problem 5 runtime = {} ms", runtime.count());
+}
+
 int main() {
     // Set up loggers
     std::vector<spdlog::sink_ptr> sinks;
@@ -315,9 +348,14 @@ int main() {
         _fileLogger->info("GPU warmup done");
     }
 
+    auto start = std::chrono::high_resolution_clock::now();
     // Run problems
     runProblem1(config);
     runProblem2(config);
     runProblem3(config);
     runProblem4(config);
+    runProblem5(config);
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> runtime = finish - start;
+    _logger->info("Total runtime: {} ms", runtime.count());
 }

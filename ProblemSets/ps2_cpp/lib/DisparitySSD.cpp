@@ -14,18 +14,19 @@ void serial::disparitySSD(const cv::Mat& left,
     assert(left.type() == CV_32FC1 && right.type() == CV_32FC1);
     // Set up file loggers
     auto logger = spdlog::get("file_logger");
-    logger->info("Padding input images with {} pixels", windowRad);
+    logger->info("disparitySSD (CPU): Padding input images with {} pixels", windowRad);
     cv::Mat leftPadded, rightPadded;
     cv::copyMakeBorder(
         left, leftPadded, windowRad, windowRad, windowRad, windowRad, cv::BORDER_REPLICATE);
     cv::copyMakeBorder(
         right, rightPadded, windowRad, windowRad, windowRad, windowRad, cv::BORDER_REPLICATE);
 
-    logger->info("Original image: rows={} cols={}; padded image: rows={} cols={}",
-                 left.rows,
-                 left.cols,
-                 leftPadded.rows,
-                 leftPadded.cols);
+    logger->info(
+        "disparitySSD (CPU): Original image: rows={} cols={}; padded image: rows={} cols={}",
+        left.rows,
+        left.cols,
+        leftPadded.rows,
+        leftPadded.cols);
 
     disparity.create(left.rows, left.cols, CV_8SC1);
 

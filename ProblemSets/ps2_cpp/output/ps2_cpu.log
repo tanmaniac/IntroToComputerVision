@@ -1,0 +1,54 @@
+[2018-03-28 17:26:24.533] [logger] [info] Created output directory at "./ps2_output"
+[2018-03-28 17:26:24.533] [logger] [info] Using CPU for disparity computation
+[2018-03-28 17:26:24.533] [logger] [info] Loaded runtime configuration from "../config/ps2.yaml"
+[2018-03-28 17:26:24.533] [logger] [info] Problem 1 begins
+[2018-03-28 17:26:24.533] [file_logger] [info] Padding input images with 6 pixels
+[2018-03-28 17:26:24.533] [file_logger] [info] Original image: rows=128 cols=128; padded image: rows=140 cols=140
+[2018-03-28 17:26:24.722] [file_logger] [info] Padding input images with 6 pixels
+[2018-03-28 17:26:24.722] [file_logger] [info] Original image: rows=128 cols=128; padded image: rows=140 cols=140
+[2018-03-28 17:26:24.899] [logger] [info] Problem 1 runtime = 366.367 ms
+[2018-03-28 17:26:24.899] [logger] [info] Problem 2 begins
+[2018-03-28 17:26:24.905] [file_logger] [info] Padding input images with 7 pixels
+[2018-03-28 17:26:24.906] [file_logger] [info] Original image: rows=511 cols=640; padded image: rows=525 cols=654
+[2018-03-28 17:27:45.975] [file_logger] [info] Padding input images with 7 pixels
+[2018-03-28 17:27:45.976] [file_logger] [info] Original image: rows=511 cols=640; padded image: rows=525 cols=654
+[2018-03-28 17:29:06.613] [logger] [info] Problem 2 runtime = 161714 ms
+[2018-03-28 17:29:06.614] [logger] [info] Problem 3 begins
+[2018-03-28 17:29:06.620] [file_logger] [info] Padding input images with 7 pixels
+[2018-03-28 17:29:06.620] [file_logger] [info] Original image: rows=511 cols=640; padded image: rows=525 cols=654
+[2018-03-28 17:30:37.099] [file_logger] [info] Padding input images with 7 pixels
+[2018-03-28 17:30:37.100] [file_logger] [info] Original image: rows=511 cols=640; padded image: rows=525 cols=654
+[2018-03-28 17:32:07.790] [file_logger] [info] Padding input images with 7 pixels
+[2018-03-28 17:32:07.791] [file_logger] [info] Original image: rows=511 cols=640; padded image: rows=525 cols=654
+[2018-03-28 17:33:44.190] [file_logger] [info] Padding input images with 7 pixels
+[2018-03-28 17:33:44.191] [file_logger] [info] Original image: rows=511 cols=640; padded image: rows=525 cols=654
+[2018-03-28 17:35:20.548] [logger] [info] Problem 3 runtime = 373934 ms
+[2018-03-28 17:35:20.548] [logger] [info] Problem 4 begins
+[2018-03-28 17:35:20.550] [file_logger] [info] DisparityNCorr: windowRad=7, minDisparity=-95, maxDisparity=0
+[2018-03-28 17:35:20.550] [file_logger] [info] DisparityNCorr: padding input images with 7 pixels
+[2018-03-28 17:35:20.551] [file_logger] [info] DisparityNCorr: original image: rows=511 cols=640; new image: rows=525 cols=654
+[2018-03-28 17:35:28.747] [file_logger] [info] DisparityNCorr: windowRad=7, minDisparity=0, maxDisparity=95
+[2018-03-28 17:35:28.747] [file_logger] [info] DisparityNCorr: padding input images with 7 pixels
+[2018-03-28 17:35:28.747] [file_logger] [info] DisparityNCorr: original image: rows=511 cols=640; new image: rows=525 cols=654
+[2018-03-28 17:35:37.254] [file_logger] [info] DisparityNCorr: windowRad=7, minDisparity=-95, maxDisparity=0
+[2018-03-28 17:35:37.254] [file_logger] [info] DisparityNCorr: padding input images with 7 pixels
+[2018-03-28 17:35:37.255] [file_logger] [info] DisparityNCorr: original image: rows=511 cols=640; new image: rows=525 cols=654
+[2018-03-28 17:35:45.478] [file_logger] [info] DisparityNCorr: windowRad=7, minDisparity=0, maxDisparity=95
+[2018-03-28 17:35:45.478] [file_logger] [info] DisparityNCorr: padding input images with 7 pixels
+[2018-03-28 17:35:45.479] [file_logger] [info] DisparityNCorr: original image: rows=511 cols=640; new image: rows=525 cols=654
+[2018-03-28 17:35:53.783] [file_logger] [info] DisparityNCorr: windowRad=7, minDisparity=-95, maxDisparity=0
+[2018-03-28 17:35:53.783] [file_logger] [info] DisparityNCorr: padding input images with 7 pixels
+[2018-03-28 17:35:53.784] [file_logger] [info] DisparityNCorr: original image: rows=511 cols=640; new image: rows=525 cols=654
+[2018-03-28 17:36:02.126] [file_logger] [info] DisparityNCorr: windowRad=7, minDisparity=0, maxDisparity=95
+[2018-03-28 17:36:02.126] [file_logger] [info] DisparityNCorr: padding input images with 7 pixels
+[2018-03-28 17:36:02.127] [file_logger] [info] DisparityNCorr: original image: rows=511 cols=640; new image: rows=525 cols=654
+[2018-03-28 17:36:10.327] [logger] [info] Problem 4 runtime = 49778.3 ms
+[2018-03-28 17:36:10.327] [logger] [info] Problem 5 begins
+[2018-03-28 17:36:10.329] [file_logger] [info] DisparityNCorr: windowRad=7, minDisparity=-80, maxDisparity=0
+[2018-03-28 17:36:10.329] [file_logger] [info] DisparityNCorr: padding input images with 7 pixels
+[2018-03-28 17:36:10.330] [file_logger] [info] DisparityNCorr: original image: rows=529 cols=640; new image: rows=543 cols=654
+[2018-03-28 17:36:18.731] [file_logger] [info] DisparityNCorr: windowRad=7, minDisparity=0, maxDisparity=80
+[2018-03-28 17:36:18.731] [file_logger] [info] DisparityNCorr: padding input images with 7 pixels
+[2018-03-28 17:36:18.733] [file_logger] [info] DisparityNCorr: original image: rows=529 cols=640; new image: rows=543 cols=654
+[2018-03-28 17:36:27.173] [logger] [info] Problem 5 runtime = 16845.6 ms
+[2018-03-28 17:36:27.173] [logger] [info] Total runtime: 602641 ms

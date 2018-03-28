@@ -38,5 +38,5 @@ problem_4_ncorr:
 # Problem 5 settings
 problem_5_ncorr:
   window_radius: 7
-  disparity_range: 95
+  disparity_range: 80
 ...
