@@ -1,0 +1,14 @@
+---
+# Problem Set 3 configuration
+images:
+  pic_a: ../Resources/ProblemSet3/pic_a.jpg
+  pic_b: ../Resources/ProblemSet3/pic_b.jpg
+
+points:
+  pts2d_pic_a: ../Resources/ProblemSet3/pts2d-pic_a.txt
+  pts2d_pic_b: ../Resources/ProblemSet3/pts2d-pic_b.txt
+  pts2d_norm_pic_a: ../Resources/ProblemSet3/pts2d-norm-pic_a.txt
+  pts3d: ../Resources/ProblemSet3/pts3d.txt
+  pts3d_norm: ../Resources/ProblemSet3/pts3d-norm.txt
+
+output_dir: ./ps3_output
