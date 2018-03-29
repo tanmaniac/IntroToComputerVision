@@ -7,6 +7,7 @@ cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 project(IntroToComputerVision)
 
 find_package(OpenCV REQUIRED core imgproc imgcodecs highgui cudafilters cudaimgproc)
+find_package(Eigen3 REQUIRED NO_MODULE)
 find_package(Boost REQUIRED)
 find_package(CUDA REQUIRED)
 
