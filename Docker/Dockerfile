@@ -6,9 +6,11 @@ LABEL maintainers="Tanmay Bangalore <tanmaybangalore@gmail.com>"
 RUN apt-get update && apt-get install -y tmux libboost-all-dev
 
 # Install Eigen for linear algebra
-RUN cd /usr/local/include &&\
+RUN cd /tmp &&\
     wget http://bitbucket.org/eigen/eigen/get/3.3.4.tar.gz -O Eigen.tar.gz &&\
-    mkdir Eigen && tar -xf Eigen.tar.gz -C Eigen --strip-components=1 && rm -f Eigen.tar.gz
+    mkdir Eigen && tar -xf Eigen.tar.gz -C Eigen --strip-components=1 &&\
+    cd Eigen && mkdir build && cd build && cmake .. && sudo make install &&\
+    cd /tmp && rm -rf Eigen*
 
 # Make a home directory so everything isn't just owned by root
 ARG UID=1000
