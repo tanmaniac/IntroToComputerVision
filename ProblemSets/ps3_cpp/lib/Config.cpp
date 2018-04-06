@@ -22,7 +22,7 @@ bool Config::Images::loadImg(const YAML::Node& node,
                              std::string& imgPath,
                              cv::Mat& img) {
     bool loadSuccess = false;
-    auto tmpLogger = spdlog::get("logger");
+    auto tmpLogger = spdlog::get(FILE_LOGGER);
     if (node[key]) {
         imgPath = node[key].as<std::string>();
         img = cv::imread(imgPath, cv::IMREAD_UNCHANGED);
@@ -40,7 +40,7 @@ bool Config::Images::loadImg(const YAML::Node& node,
 
 Config::Points::Points(const YAML::Node& node) {
     bool loadSuccess = true;
-    auto tmpLogger = spdlog::get("logger");
+    auto tmpLogger = spdlog::get(FILE_LOGGER);
     loadSuccess = loadPoints<float>(node, "pts2d_pic_a", _picA);
     loadSuccess = loadPoints<float>(node, "pts2d_pic_b", _picB);
     loadSuccess = loadPoints<float>(node, "pts2d_norm_pic_a", _picANorm);
@@ -51,7 +51,8 @@ Config::Points::Points(const YAML::Node& node) {
 }
 
 Config::Config(const std::string& configFilePath) {
-    _logger = spdlog::get("logger");
+    _logger = spdlog::get(STDOUT_LOGGER);
+    _fileLogger = spdlog::get(FILE_LOGGER);
     YAML::Node config = YAML::LoadFile(configFilePath);
     if (config.IsNull()) {
         _logger->error("Could not load input file (was looking for {})", configFilePath);

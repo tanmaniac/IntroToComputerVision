@@ -9,5 +9,5 @@ cuda_add_library(ps3sol ${lib_hdr} ${lib_cu} ${lib_src})
 
 cuda_add_executable(ps3 ${exe_hdr} ${exe_src})
 
-target_link_libraries(ps3sol yaml-cpp cv_common)
+target_link_libraries(ps3sol yaml-cpp cv_common Eigen3::Eigen)
 target_link_libraries(ps3 ps3sol)

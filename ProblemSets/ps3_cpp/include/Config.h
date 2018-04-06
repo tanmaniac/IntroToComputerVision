@@ -11,9 +11,12 @@
 #include <cstddef>
 #include <iostream>
 
+static constexpr char FILE_LOGGER[] = "file_logger";
+static constexpr char STDOUT_LOGGER[] = "logger";
+
 class Config {
 private:
-    std::shared_ptr<spdlog::logger> _logger;
+    std::shared_ptr<spdlog::logger> _logger, _fileLogger;
 
     struct BasicConfig {
         bool configDone();
@@ -27,7 +30,7 @@ private:
                 val = node[key].as<T>();
                 return true;
             }
-            auto tmpLogger = spdlog::get("logger");
+            auto tmpLogger = spdlog::get(STDOUT_LOGGER);
             tmpLogger->error("Could not load param \"{}\"", key);
             return false;
         }
@@ -53,7 +56,7 @@ public:
 
     struct Points : BasicConfig {
         // Vectors of column-vectors for each of the point sets
-        std::vector<cv::Mat> _picA, _picB, _picANorm, _pts3D, _pts3DNorm;
+        cv::Mat _picA, _picB, _picANorm, _pts3D, _pts3DNorm;
 
         Points() = default;
         Points(const YAML::Node& node);
@@ -61,20 +64,19 @@ public:
     private:
         // Load points from a text file
         template <typename T>
-        bool loadPoints(const YAML::Node& node,
-                        const std::string& key,
-                        std::vector<cv::Mat>& points) {
-            auto tmpLogger = spdlog::get("logger");
+        bool loadPoints(const YAML::Node& node, const std::string& key, cv::Mat& points) {
+            auto logger = spdlog::get(STDOUT_LOGGER);
+            auto flogger = spdlog::get(FILE_LOGGER);
             if (node[key]) {
                 std::string path = node[key].as<std::string>();
                 points = FParse::parseAs<T>(path);
                 if (!points.empty()) {
-                    tmpLogger->info("Loaded points from {}", path);
+                    flogger->info("Loaded points from {}", path);
                     return true;
                 }
             }
 
-            tmpLogger->error("Could not load points from param \"{}\"", key);
+            logger->error("Could not load points from param \"{}\"", key);
             return false;
         }
     };

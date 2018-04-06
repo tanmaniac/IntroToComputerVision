@@ -7,6 +7,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -21,7 +22,7 @@ namespace FParse {
  *
  * \param filePath Path to the input file.
  */
-std::vector<cv::Mat> parse(const std::string& filePath);
+cv::Mat parse(const std::string& filePath);
 
 /**
  * \brief Parse an input file delimited with spaces into a vector of column-vectors representing 2D
@@ -30,29 +31,29 @@ std::vector<cv::Mat> parse(const std::string& filePath);
  * \param filePath Path to the input file.
  */
 template <typename T>
-std::vector<cv::Mat> parseAs(const std::string& filePath);
+cv::Mat parseAs(const std::string& filePath);
 
 /**
  * \brief overload of parse() using a custom delimiter.
  */
-std::vector<cv::Mat> parse(const std::string& filePath, const char delim);
+cv::Mat parse(const std::string& filePath, const char delim);
 
 /**
  * \brief Overload of parseAs<T>() using a custom delimiter.
  */
 template <typename T>
-std::vector<cv::Mat> parseAs(const std::string& filePath, const char delim);
+cv::Mat parseAs(const std::string& filePath, const char delim);
 
 /**
  * \brief Overload of parse() using a string-type delimiter.
  */
-std::vector<cv::Mat> parse(const std::string& filePath, const std::string& delim);
+cv::Mat parse(const std::string& filePath, const std::string& delim);
 
 /**
  * \brief Overload of parseAs<T>() using a string-type delimiter.
  */
 template <typename T>
-std::vector<cv::Mat> parseAs(const std::string& filePath, const std::string& delim);
+cv::Mat parseAs(const std::string& filePath, const std::string& delim);
 
 // Deduces the OpenCV type (CV_32FC1, etc) of a given type.
 template <typename T>
@@ -63,19 +64,19 @@ int detectCvType();
 //---------- Implementations for templated functions ----------
 
 template <typename T>
-std::vector<cv::Mat> FParse::parseAs(const std::string& filePath) {
+cv::Mat FParse::parseAs(const std::string& filePath) {
     return parseAs<T>(filePath, " ");
 }
 
 template <typename T>
-std::vector<cv::Mat> FParse::parseAs(const std::string& filePath, const char delim) {
+cv::Mat FParse::parseAs(const std::string& filePath, const char delim) {
     return parseAs<T>(filePath, std::string(1, delim));
 }
 
 template <typename T>
-std::vector<cv::Mat> FParse::parseAs(const std::string& filePath, const std::string& delim) {
+cv::Mat FParse::parseAs(const std::string& filePath, const std::string& delim) {
     static_assert(std::is_arithmetic<T>::value, "Template parameter must be an arithmetic type");
-    std::vector<cv::Mat> out;
+    cv::Mat out;
     typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
     boost::char_separator<char> separator(delim.c_str());
 
@@ -83,16 +84,24 @@ std::vector<cv::Mat> FParse::parseAs(const std::string& filePath, const std::str
     std::ifstream input(filePath);
     if (input.is_open()) {
         std::string line;
+        bool isFirstLine = true;
         while (std::getline(input, line)) {
             tokenizer tokens(line, separator);
             // Column-vector that we'll be pushing values to. Automatically deduce the type.
             cv::Mat point(0, 1, detectCvType<T>());
             // Iterate over the string and push back each tokenized value.
+            size_t count = 0;
             for (auto tokenIter = tokens.begin(); tokenIter != tokens.end(); tokenIter++) {
                 auto val = boost::lexical_cast<T>(*tokenIter);
                 point.push_back(val);
+                if (isFirstLine) count++;
             }
-            out.push_back(point);
+            if (isFirstLine) {
+                // Initialize the output to be the correct size
+                out.create(count, 0, detectCvType<T>());
+                isFirstLine = false;
+            }
+            cv::hconcat(out, point, out);
         }
     }
     return out;
@@ -116,6 +125,6 @@ int FParse::detectCvType() {
     } else if (std::is_same<T, double>::value) {
         return CV_64FC1;
     } else {
-        return -1;
+        throw std::invalid_argument("Requested type has no corresponding matrix type in OpenCV");
     }
 }
