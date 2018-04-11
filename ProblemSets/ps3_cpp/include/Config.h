@@ -10,9 +10,13 @@
 
 #include <cstddef>
 #include <iostream>
+#include <memory>
+#include <random>
 
+namespace config {
 static constexpr char FILE_LOGGER[] = "file_logger";
 static constexpr char STDOUT_LOGGER[] = "logger";
+}; // namespace config
 
 class Config {
 private:
@@ -30,7 +34,7 @@ private:
                 val = node[key].as<T>();
                 return true;
             }
-            auto tmpLogger = spdlog::get(STDOUT_LOGGER);
+            auto tmpLogger = spdlog::get(config::STDOUT_LOGGER);
             tmpLogger->error("Could not load param \"{}\"", key);
             return false;
         }
@@ -65,8 +69,8 @@ public:
         // Load points from a text file
         template <typename T>
         bool loadPoints(const YAML::Node& node, const std::string& key, cv::Mat& points) {
-            auto logger = spdlog::get(STDOUT_LOGGER);
-            auto flogger = spdlog::get(FILE_LOGGER);
+            auto logger = spdlog::get(config::STDOUT_LOGGER);
+            auto flogger = spdlog::get(config::FILE_LOGGER);
             if (node[key]) {
                 std::string path = node[key].as<std::string>();
                 points = FParse::parseAs<T>(path);
@@ -84,7 +88,10 @@ public:
     Images _images;
     Points _points;
 
+    // Path to which output images will be written
     std::string _outputPathPrefix;
+    // Seed for mersenne twister engine
+    std::unique_ptr<std::seed_seq> _mersenneSeed;
 
     bool _configDone = false;
 

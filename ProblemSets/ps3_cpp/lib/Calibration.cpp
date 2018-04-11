@@ -28,6 +28,9 @@ Eigen::MatrixXf calib::solveLeastSquares(const Eigen::MatrixXf& pts2d,
 
     // Solve least squares
     Eigen::MatrixXf sol = (A.transpose() * A).ldlt().solve(A.transpose() * b);
+    // Append a 1 to the end since scale is constant
+    sol.conservativeResize(sol.rows() + 1, sol.cols());
+    sol(sol.rows() - 1, 0) = 1;
     return sol;
 }
 

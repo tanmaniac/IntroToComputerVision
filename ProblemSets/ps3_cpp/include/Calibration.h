@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Eigen/Dense>
 #include <opencv2/core/core.hpp>
 

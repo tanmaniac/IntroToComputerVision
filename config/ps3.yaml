@@ -12,3 +12,7 @@ points:
   pts3d_norm: ../Resources/ProblemSet3/pts3d-norm.txt
 
 output_dir: ./ps3_output
+
+# Seed for Mersenne Twister Engine used in Problem 1b
+mersenne_seed: 16 38 c7 e4 6a a2 d8 cc 96 f6 fe f1 4b 7d a7 25
+...
