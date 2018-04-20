@@ -1,0 +1,15 @@
+---
+# Problem Set 4 configuration
+images:
+  transA.jpg: ../Resources/ProblemSet4/transA.jpg
+  transB.jpg: ../Resources/ProblemSet4/transB.jpg
+  simA.jpg: ../Resources/ProblemSet4/simA.jpg
+  simB.jpg: ../Resources/ProblemSet4/simB.jpg
+  check.bmp: ../Resources/ProblemSet4/check.bmp
+  check_rot.bmp: ../Resources/ProblemSet4/check_rot.bmp
+
+output_dir: ./ps4_output
+
+# Seed for Mersenne Twister Engine used in Problem 1b
+mersenne_seed: 16 38 c7 e4 6a a2 d8 cc 96 f6 fe f1 4b 7d a7 25
+...
