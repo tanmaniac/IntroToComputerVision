@@ -54,12 +54,15 @@ public:
 
     struct Harris : BasicConfig {
         int _sobelKernelSize;
+        size_t _windowSize, _minDistance;
+        float _gaussianSigma, _alpha, _responseThresh;
 
         Harris() = default;
         Harris(const YAML::Node& harrisNode);
     };
 
     Images _images;
+    bool _useGpu = false;
     // Settings for Harris operator for the transA and simA images, respectively
     Harris _harrisTrans, _harrisSim;
 

@@ -62,6 +62,11 @@ Config::Config(const std::string& configFilePath) {
 Config::Harris::Harris(const YAML::Node& harrisNode) {
     bool loadSuccess = true;
     loadSuccess = loadParam(harrisNode, "sobel_kernel_size", _sobelKernelSize);
+    loadSuccess = loadParam(harrisNode, "window_size", _windowSize);
+    loadSuccess = loadParam(harrisNode, "gaussian_sigma", _gaussianSigma);
+    loadSuccess = loadParam(harrisNode, "alpha", _alpha);
+    loadSuccess = loadParam(harrisNode, "response_threshold", _responseThresh);
+    loadSuccess = loadParam(harrisNode, "min_distance", _minDistance);
 
     _configDone = loadSuccess;
 }
@@ -108,6 +113,12 @@ bool Config::loadConfig(const YAML::Node& config) {
         std::stringstream ss;
         _mersenneSeed->param(std::ostream_iterator<uint32_t>(ss, " "));
         _logger->warn("No random seed specified; using {}", ss.str());
+    }
+
+    // Should we use GPU or CPU?
+    if (config["use_gpu"]) {
+        _useGpu = config["use_gpu"].as<bool>();
+        _logger->info("Using {} for compute", _useGpu ? "GPU" : "CPU");
     }
 
     if (YAML::Node harrisNode = config["harris_trans"]) {
