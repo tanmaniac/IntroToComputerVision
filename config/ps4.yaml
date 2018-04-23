@@ -10,6 +10,12 @@ images:
 
 output_dir: ./ps4_output
 
-# Seed for Mersenne Twister Engine used in Problem 1b
+# Seed for Mersenne Twister Engine
 mersenne_seed: 16 38 c7 e4 6a a2 d8 cc 96 f6 fe f1 4b 7d a7 25
+
+harris_trans:
+  sobel_kernel_size: 3
+
+harris_sim:
+  sobel_kernel_size: 3
 ...

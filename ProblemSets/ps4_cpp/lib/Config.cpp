@@ -59,6 +59,13 @@ Config::Config(const std::string& configFilePath) {
     }
 }
 
+Config::Harris::Harris(const YAML::Node& harrisNode) {
+    bool loadSuccess = true;
+    loadSuccess = loadParam(harrisNode, "sobel_kernel_size", _sobelKernelSize);
+
+    _configDone = loadSuccess;
+}
+
 bool Config::loadConfig(const YAML::Node& config) {
     // Load images
     if (YAML::Node imagesNode = config["images"]) {
@@ -103,10 +110,25 @@ bool Config::loadConfig(const YAML::Node& config) {
         _logger->warn("No random seed specified; using {}", ss.str());
     }
 
+    if (YAML::Node harrisNode = config["harris_trans"]) {
+        _harrisTrans = Harris(harrisNode);
+    }
+    if (YAML::Node harrisNode = config["harris_sim"]) {
+        _harrisSim = Harris(harrisNode);
+    }
+
     bool configSuccess = true;
     // Verify that configurations were successful
     if (!_images.configDone()) {
         _logger->error("Loading images failed!");
+        configSuccess = false;
+    }
+    if (!_harrisTrans.configDone()) {
+        _logger->error("Could not load parameters for Harris operator of trans image set!");
+        configSuccess = false;
+    }
+    if (!_harrisSim.configDone()) {
+        _logger->error("Could not load parameters for Harris operator of sim image set!");
         configSuccess = false;
     }
 

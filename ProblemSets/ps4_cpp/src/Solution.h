@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../include/Config.h"
+
 namespace solution {
-void test();
-};
+void runProblem1(const Config& config);
+}; // namespace solution

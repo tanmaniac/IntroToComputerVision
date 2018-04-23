@@ -52,7 +52,16 @@ public:
         bool loadImg(const YAML::Node& node, const std::string& key, cv::Mat& img);
     };
 
+    struct Harris : BasicConfig {
+        int _sobelKernelSize;
+
+        Harris() = default;
+        Harris(const YAML::Node& harrisNode);
+    };
+
     Images _images;
+    // Settings for Harris operator for the transA and simA images, respectively
+    Harris _harrisTrans, _harrisSim;
 
     // Path to which output images will be written
     std::string _outputPathPrefix;
