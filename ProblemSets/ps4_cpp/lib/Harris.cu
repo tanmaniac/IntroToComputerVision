@@ -14,16 +14,26 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 // Texture memory for fast access to spatially colocated memory
-texture<float, cudaTextureType2D, cudaReadModeElementType> texGradX;
-texture<float, cudaTextureType2D, cudaReadModeElementType> texGradY;
+texture<float, cudaTextureType2D, cudaReadModeElementType> texGradX;    // X-direction gradient
+texture<float, cudaTextureType2D, cudaReadModeElementType> texGradY;    // Y-direction gradient
+texture<float, cudaTextureType2D, cudaReadModeElementType> texGauss;    // Gaussian kernel
 
 // Implementations
+
+// Implements a fused-multiply-add for a 4-vector of single-precision floating points.
+__device__ float4 __fmaf4(float weight, float4 A, float4 B) {
+    float4 result;
+    asm("fma.rn.f32 %0, %1, %2, %3;" : "=f"(result.x) : "f"(weight), "f"(A.x), "f"(B.x));
+    asm("fma.rn.f32 %0, %1, %2, %3;" : "=f"(result.y) : "f"(weight), "f"(A.y), "f"(B.y));
+    asm("fma.rn.f32 %0, %1, %2, %3;" : "=f"(result.z) : "f"(weight), "f"(A.z), "f"(B.z));
+    asm("fma.rn.f32 %0, %1, %2, %3;" : "=f"(result.w) : "f"(weight), "f"(A.w), "f"(B.w));
+    return result;
+}
 
 // Naive corner response kernel (unoptimized)
 template <typename T>
 __global__ void cornerResponseKernel(const cv::cuda::PtrStepSz<T> gradX,
                                      const cv::cuda::PtrStepSz<T> gradY,
-                                     const cv::cuda::PtrStepSz<T> gaussian,
                                      const size_t windowSize,
                                      const float harrisScore,
                                      cv::cuda::PtrStepSz<T> cornerResponse) {
@@ -34,7 +44,10 @@ __global__ void cornerResponseKernel(const cv::cuda::PtrStepSz<T> gradX,
         return;
     }
 
-    float Ix, Iy;                                    // Values of gradients at a given x and y
+    float Ix, Iy; // Values of gradients at a given x and y
+    // moment and intensity vectors are treated as 2x2 matrices structured as
+    // [ x y
+    //   z w ]
     float4 intensity;                                // Intensity matrix
     float4 moment = make_float4(0.f, 0.f, 0.f, 0.f); // Second moment matrix
 
@@ -45,21 +58,14 @@ __global__ void cornerResponseKernel(const cv::cuda::PtrStepSz<T> gradX,
             Ix = tex2D(texGradX, gThreadPos.x + wx, gThreadPos.y + wy);
             Iy = tex2D(texGradY, gThreadPos.x + wx, gThreadPos.y + wy);
 
-            float weight = gaussian(wy + windowRad, wx + windowRad);
+            float weight = tex2D(texGauss, wx + windowRad, wy + windowRad);
             // Build up gradient matrix
             intensity = make_float4(Ix * Ix, Ix * Iy, Ix * Iy, Iy * Iy);
 
-            // TODO: Maybe a ptxas optimization to do this in one instruction?
-            moment.x += weight * intensity.x;
-            moment.y += weight * intensity.y;
-            moment.z += weight * intensity.z;
-            moment.w += weight * intensity.w;
+            moment = __fmaf4(weight, intensity, moment);
         }
     }
 
-    // moment matrix is stored like
-    // [ x y
-    //   z w ]
     float trace = moment.x + moment.w;
     float determinant = moment.x * moment.w - moment.z * moment.y;
     float response = determinant - harrisScore * trace * trace;
@@ -106,6 +112,7 @@ void harris::gpu::getCornerResponse(const cv::Mat& gradX,
     // Bind GPU matricies to texture memory
     cv::cuda::device::bindTexture<float>(&texGradX, d_gradX);
     cv::cuda::device::bindTexture<float>(&texGradY, d_gradY);
+    cv::cuda::device::bindTexture<float>(&texGauss, d_gauss);
 
     // Set up kernel call
     static constexpr size_t TILE_SIZE = 16;
@@ -122,7 +129,7 @@ void harris::gpu::getCornerResponse(const cv::Mat& gradX,
 
     cornerResponseKernel<float>
         <<<blocks, threads, 0, cv::cuda::StreamAccessor::getStream(stream)>>>(
-            d_gradX, d_gradY, d_gauss, windowSize, harrisScore, d_cornerResponse);
+            d_gradX, d_gradY, windowSize, harrisScore, d_cornerResponse);
 
     cudaDeviceSynchronize();
     checkCudaErrors(cudaGetLastError());
