@@ -1,4 +1,5 @@
 #include <common/GpuTimer.h>
+#include <common/OpenCVThrustInterop.h>
 #include <common/Utils.h>
 #include <common/CudaCommon.cuh>
 #include "../include/Config.h"
@@ -13,10 +14,14 @@
 #include <opencv2/core/opengl.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+// Num cols each thread processes for non-maximum suppression
+static constexpr size_t NMS_COLS_PER_THREAD = 32;
+
 // Texture memory for fast access to spatially colocated memory
-texture<float, cudaTextureType2D, cudaReadModeElementType> texGradX;    // X-direction gradient
-texture<float, cudaTextureType2D, cudaReadModeElementType> texGradY;    // Y-direction gradient
-texture<float, cudaTextureType2D, cudaReadModeElementType> texGauss;    // Gaussian kernel
+texture<float, cudaTextureType2D, cudaReadModeElementType> texGradX; // X-direction gradient
+texture<float, cudaTextureType2D, cudaReadModeElementType> texGradY; // Y-direction gradient
+texture<float, cudaTextureType2D, cudaReadModeElementType> texGauss; // Gaussian kernel
+texture<float, cudaTextureType2D, cudaReadModeElementType> texCornerResponse; // Corner responses
 
 // Implementations
 
@@ -32,15 +37,15 @@ __device__ float4 __fmaf4(float weight, float4 A, float4 B) {
 
 // Naive corner response kernel (unoptimized)
 template <typename T>
-__global__ void cornerResponseKernel(const cv::cuda::PtrStepSz<T> gradX,
-                                     const cv::cuda::PtrStepSz<T> gradY,
+__global__ void cornerResponseKernel(const size_t rows,
+                                     const size_t cols,
                                      const size_t windowSize,
-                                     const float harrisScore,
+                                     const float alpha,
                                      cv::cuda::PtrStepSz<T> cornerResponse) {
     const int2 gThreadPos =
         make_int2(blockIdx.x * blockDim.x + threadIdx.x, blockIdx.y * blockDim.y + threadIdx.y);
 
-    if (gThreadPos.x >= gradX.cols || gThreadPos.y >= gradX.rows) {
+    if (gThreadPos.x >= cols || gThreadPos.y >= rows) {
         return;
     }
 
@@ -68,7 +73,7 @@ __global__ void cornerResponseKernel(const cv::cuda::PtrStepSz<T> gradX,
 
     float trace = moment.x + moment.w;
     float determinant = moment.x * moment.w - moment.z * moment.y;
-    float response = determinant - harrisScore * trace * trace;
+    float response = determinant - alpha * trace * trace;
 
     cornerResponse(gThreadPos.y, gThreadPos.x) = response;
 }
@@ -121,15 +126,13 @@ void harris::gpu::getCornerResponse(const cv::Mat& gradX,
                 common::divRoundUp(gradX.rows, TILE_SIZE));
     dim3 threads(TILE_SIZE, TILE_SIZE);
 
-    // No shared memory
-
-    logger->info("Launching cornerResponseKernel");
+    flogger->info("Launching cornerResponseKernel");
     GpuTimer timer;
     timer.start();
 
     cornerResponseKernel<float>
         <<<blocks, threads, 0, cv::cuda::StreamAccessor::getStream(stream)>>>(
-            d_gradX, d_gradY, windowSize, harrisScore, d_cornerResponse);
+            d_gradX.rows, d_gradX.cols, windowSize, harrisScore, d_cornerResponse);
 
     cudaDeviceSynchronize();
     checkCudaErrors(cudaGetLastError());
@@ -139,4 +142,118 @@ void harris::gpu::getCornerResponse(const cv::Mat& gradX,
 
     // Copy back to CPU
     d_cornerResponse.download(cornerResponse, stream);
+}
+
+//--------- Corner refining functions -------------
+
+template <typename T>
+__global__ void refineCornersKernel(const size_t rows,
+                                    const size_t cols,
+                                    const double threshold,
+                                    const int minDistance,
+                                    cv::cuda::PtrStepSz<T> corners) {
+    // Each thread processes NMS_COLS_PER_THREAD pixels horizontally
+    const int2 gThreadPos =
+        make_int2(blockIdx.x * NMS_COLS_PER_THREAD, blockIdx.y * blockDim.y + threadIdx.y);
+
+    if (gThreadPos.x >= cols || gThreadPos.y >= rows) {
+        return;
+    }
+
+    float curVal;    // Current value in corner response matrix being processed
+    int2 texPos;     // Position in texture map
+    bool isLocalMax; // Whether or not the current pixel is a local maxima
+
+#pragma unroll
+    for (int idx = 0; idx < NMS_COLS_PER_THREAD; idx++) {
+        texPos = make_int2(gThreadPos.x + idx, gThreadPos.y);
+        curVal = tex2D(texCornerResponse, texPos.x, texPos.y);
+        if (curVal >= threshold) {
+            isLocalMax = true;
+            // Iterate over window, which is (minDistance * 2 + 1)^2 pixels
+            for (int wy = -minDistance; wy <= minDistance; wy++) {
+                for (int wx = -minDistance; wx <= minDistance; wx++) {
+                    // Skip if comparison point is the current point
+                    int compY = min(max(0, texPos.y + wy), int(rows - 1));
+                    int compX = min(max(0, texPos.x + wx), int(cols - 1));
+                    if (texPos.y == compY && texPos.x == compX) continue;
+
+                    if (curVal <= tex2D(texCornerResponse, compX, compY)) {
+                        isLocalMax = false;
+                        break;
+                    }
+                }
+                if (!isLocalMax) break;
+            }
+            if (isLocalMax) {
+                corners(texPos.y, texPos.x) = curVal;
+                // Skip ahead in the row, since we know this is a local maxima
+                idx += (minDistance - 1);
+            }
+        }
+    }
+}
+
+// Model of predicate that returns true if the compared value is greater than or equal to the
+// predicate's value.
+template <typename T>
+struct GreaterOrEqual {
+    T _value;
+    __host__ __device__ GreaterOrEqual(T value) : _value(value) {}
+    __host__ __device__ bool operator()(const T& comp) const {
+        return comp >= _value;
+    }
+};
+
+void harris::gpu::refineCorners(const cv::Mat& cornerResponse,
+                                const double threshold,
+                                const int minDistance,
+                                cv::Mat& corners) {
+    // Only support CV_32F right now
+    assert(cornerResponse.type() == CV_32F);
+
+    auto logger = spdlog::get(config::STDOUT_LOGGER);
+    auto flogger = spdlog::get(config::FILE_LOGGER);
+
+    corners = cv::Mat::zeros(cornerResponse.rows, cornerResponse.cols, cornerResponse.type());
+    flogger->info(
+        "Resized corners to match input size: {} rows x {} cols", corners.rows, corners.cols);
+
+    // Allocate GPU memory and async stream
+    cv::cuda::GpuMat d_cornerResponse(
+        cornerResponse.rows, cornerResponse.cols, cornerResponse.type()),
+        d_corners(corners.rows, corners.cols, corners.type());
+    cv::cuda::Stream stream;
+    stream.enqueueHostCallback(common::checkCopySuccess, nullptr);
+
+    // Asynchronously copy memory
+    d_cornerResponse.upload(cornerResponse, stream);
+    d_corners.setTo(cv::Scalar(0), stream);
+
+    // Bind GPU matrices to texture memory
+    cv::cuda::device::bindTexture<float>(&texCornerResponse, d_cornerResponse);
+
+    // Set up kernel call
+    static constexpr size_t TILE_SIZE_X = 1;
+    static constexpr size_t TILE_SIZE_Y = 32;
+
+    dim3 blocks(common::divRoundUp(cornerResponse.cols, NMS_COLS_PER_THREAD),
+                common::divRoundUp(cornerResponse.rows, TILE_SIZE_Y));
+    dim3 threads(TILE_SIZE_X, TILE_SIZE_Y);
+
+    flogger->info("Launching refineCornersKernel");
+    GpuTimer timer;
+    timer.start();
+
+    refineCornersKernel<float><<<blocks, threads, 0, cv::cuda::StreamAccessor::getStream(stream)>>>(
+        d_cornerResponse.rows, d_cornerResponse.cols, threshold, minDistance, d_corners);
+
+    cudaDeviceSynchronize();
+    checkCudaErrors(cudaGetLastError());
+
+    timer.stop();
+    logger->info("refineCornersKernel execution took {} ms", timer.getTime());
+
+    // Copy back to CPU
+    d_corners.download(corners, stream);
 }

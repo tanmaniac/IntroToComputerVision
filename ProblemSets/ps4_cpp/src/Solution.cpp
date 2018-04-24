@@ -88,10 +88,17 @@ void harrisHelper(HarrisContainer& conf) {
     logger->info("Computed corner responses and wrote to {}", conf._crImgPath);
 
     // Refine corners
-    harris::cpu::refineCorners(conf._cornerResponse,
-                               conf._config._responseThresh,
-                               conf._config._minDistance,
-                               conf._corners);
+    if (conf._useGpu) {
+        harris::gpu::refineCorners(conf._cornerResponse,
+                                   conf._config._responseThresh,
+                                   conf._config._minDistance,
+                                   conf._corners);
+    } else {
+        harris::cpu::refineCorners(conf._cornerResponse,
+                                   conf._config._responseThresh,
+                                   conf._config._minDistance,
+                                   conf._corners);
+    }
 
     // Draw dots
     cv::Mat dottedImg;
