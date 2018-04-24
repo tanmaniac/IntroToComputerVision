@@ -35,7 +35,15 @@ __device__ float4 __fmaf4(float weight, float4 A, float4 B) {
     return result;
 }
 
-// Naive corner response kernel (unoptimized)
+/**
+ * \brief cornerResponseKernel CUDA kernel to compute the corner response matrix
+ *
+ * \param rows Number of rows in input
+ * \param cols Number of columns in input
+ * \param windowSize Size of the Gaussian window over which to compute the corner response
+ * \param alpha Constant
+ * \param cornerResponse Output matrix of corner responses
+ */
 template <typename T>
 __global__ void cornerResponseKernel(const size_t rows,
                                      const size_t cols,
@@ -146,6 +154,16 @@ void harris::gpu::getCornerResponse(const cv::Mat& gradX,
 
 //--------- Corner refining functions -------------
 
+/**
+ * \brief cornerResponseKernel CUDA kernel to threshold corner responses and perform non-maximum
+ * suppression
+ *
+ * \param rows Number of rows in input
+ * \param cols Number of columns in input
+ * \param threshold Minimum corner response value required to be considered a corner
+ * \param minDistance Minimum distance between any two corners in the X and Y direction
+ * \param corners Output matrix of corners
+ */
 template <typename T>
 __global__ void refineCornersKernel(const size_t rows,
                                     const size_t cols,
