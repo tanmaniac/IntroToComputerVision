@@ -1,4 +1,5 @@
 #include "../include/Config.h"
+#include <common/Utils.h>
 
 #include <opencv2/imgcodecs.hpp>
 
@@ -7,37 +8,13 @@
 #include <iterator>
 #include <sstream>
 
-bool Config::BasicConfig::configDone() {
-    return _configDone;
-}
-
 Config::Images::Images(const YAML::Node& imagesNode) {
     bool loadSuccess = true;
-    loadSuccess = loadImg(imagesNode, "pic_a", _picAPath, _picA);
-    loadSuccess = loadImg(imagesNode, "pic_b", _picBPath, _picB);
+    auto tmpLogger = spdlog::get(config::STDOUT_LOGGER);
+    loadSuccess = loadImg(imagesNode, "pic_a", _picA, tmpLogger);
+    loadSuccess = loadImg(imagesNode, "pic_b", _picB, tmpLogger);
 
     _configDone = loadSuccess;
-}
-
-bool Config::Images::loadImg(const YAML::Node& node,
-                             const std::string& key,
-                             std::string& imgPath,
-                             cv::Mat& img) {
-    bool loadSuccess = false;
-    auto tmpLogger = spdlog::get(config::FILE_LOGGER);
-    if (node[key]) {
-        imgPath = node[key].as<std::string>();
-        img = cv::imread(imgPath, cv::IMREAD_UNCHANGED);
-        if (!img.empty()) {
-            loadSuccess = true;
-        } else {
-            tmpLogger->error("Could not load image \"{}\"", imgPath);
-        }
-    } else {
-        tmpLogger->error("Could not find YAML key \"{}\"", key);
-    }
-    tmpLogger->info("Loaded image from {}", imgPath);
-    return loadSuccess;
 }
 
 Config::Points::Points(const YAML::Node& node) {
@@ -79,7 +56,7 @@ bool Config::loadConfig(const YAML::Node& config) {
     // Set output path prefix
     if (config["output_dir"]) {
         _outputPathPrefix = config["output_dir"].as<std::string>();
-        if (makeDir(_outputPathPrefix)) {
+        if (common::makeDir(_outputPathPrefix)) {
             _logger->info("Created output directory at \"{}\"", _outputPathPrefix);
             madeOutputDir = true;
         }
@@ -131,13 +108,4 @@ bool Config::loadConfig(const YAML::Node& config) {
 
     _configDone = configSuccess;
     return _configDone;
-}
-
-bool Config::makeDir(const std::string& dirPath) {
-    const int dirErr = mkdir(dirPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    if (dirErr == -1) {
-        // The directory already exists, so there's nothing to do anyway. Return true
-        return errno == EEXIST;
-    }
-    return true;
 }

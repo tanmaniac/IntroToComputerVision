@@ -1,4 +1,5 @@
 #include "../include/DisparityNCorr.h"
+#include "../include/Config.h"
 
 #include <spdlog/spdlog.h>
 
@@ -16,7 +17,7 @@ void serial::disparityNCorr(const cv::Mat& left,
                             cv::Mat& disparity) {
     assert(left.type() == CV_32FC1 && right.type() == CV_32FC1);
     // Set up file loggers
-    auto logger = spdlog::get("file_logger");
+    auto logger = spdlog::get(config::FILE_LOGGER);
     logger->info("DisparityNCorr: windowRad={}, minDisparity={}, maxDisparity={}",
                  windowRad,
                  minDisparity,
