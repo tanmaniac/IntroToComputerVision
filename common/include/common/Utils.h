@@ -16,4 +16,6 @@ std::size_t divRoundUp(const numType num, const denomType denom) {
 // CUDA stream callback
 void checkCopySuccess(int status, void* userData);
 
+bool makeDir(const std::string& dirPath);
+
 }; // namespace common

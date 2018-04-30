@@ -2,6 +2,7 @@
 #include <common/Utils.h>
 #include <common/CudaCommon.cuh>
 #include "../include/DisparitySSD.h"
+#include "../include/Config.h"
 
 #include <spdlog/spdlog.h>
 
@@ -152,7 +153,7 @@ void cuda::disparitySSD(const cv::Mat& left,
     static constexpr size_t TILE_SIZE_Y = 1;
 
     // Set up file loggers
-    auto logger = spdlog::get("file_logger");
+    auto logger = spdlog::get(config::FILE_LOGGER);
     logger->info("Setting up CUDA kernel execution...");
     logger->info("Original image: rows={} cols={}", left.rows, left.cols);
 

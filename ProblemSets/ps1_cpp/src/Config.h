@@ -1,6 +1,9 @@
 #pragma once
 
 // Structures to hold runtime configurations.
+#include <common/BasicConfig.h>
+#include <common/Utils.h>
+
 #include <yaml-cpp/yaml.h>
 #include "spdlog/spdlog.h"
 
@@ -9,39 +12,18 @@
 #include <cstddef>
 #include <iostream>
 
+namespace config {
+static constexpr char FILE_LOGGER[] = "file_logger";
+static constexpr char STDOUT_LOGGER[] = "logger";
+}; // namespace config
+
 class Config {
 private:
     std::shared_ptr<spdlog::logger> _logger;
 
-    struct BasicConfig {
-        bool configDone();
-
-    protected:
-        bool _configDone = false;
-
-        template <typename T>
-        bool loadParam(const YAML::Node& node, const std::string& key, T& val) {
-            if (node[key]) {
-                val = node[key].as<T>();
-                return true;
-            }
-            auto tmpLogger = spdlog::get("logger");
-            tmpLogger->error("Could not load param \"{}\"", key);
-            return false;
-        }
-
-        // Load an image from a YAML node and return whether or not it succeeded
-        bool loadImgFromYAML(const YAML::Node& node,
-                             const std::string& key,
-                             std::string imgPath,
-                             cv::Mat& img);
-    };
-
 public:
     // Structures
     struct Images : BasicConfig {
-        // Paths to each of the input images
-        std::string _input0Path, _input0NoisePath, _input1Path, _input2Path, _input3Path;
         cv::Mat _input0, _input0Noise, _input1, _input2, _input3;
 
         Images() = default;
@@ -87,7 +69,4 @@ public:
     Config(const std::string& configFilePath);
 
     bool loadConfig(const YAML::Node& config);
-
-private:
-    bool makeDir(const std::string& dirPath);
 };
