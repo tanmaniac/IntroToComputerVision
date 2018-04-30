@@ -5,75 +5,56 @@
 #include <errno.h>
 #include <sys/stat.h>
 
-bool Config::BasicConfig::configDone() {
-    return _configDone;
-}
-
-bool Config::BasicConfig::loadImgFromYAML(const YAML::Node& node,
-                                          const std::string& key,
-                                          std::string imgPath,
-                                          cv::Mat& img) {
-    bool loadSuccess = false;
-    if (node[key]) {
-        imgPath = node[key].as<std::string>();
-        img = cv::imread(imgPath, cv::IMREAD_UNCHANGED);
-        if (!img.empty()) {
-            loadSuccess = true;
-        } else {
-            std::cerr << "Could not load image \"" << key << "\" at \"" << imgPath << "\""
-                      << std::endl;
-        }
-    }
-
-    return loadSuccess;
-}
-
 Config::Images::Images(const YAML::Node& imagesNode) {
     bool loadSuccess = true;
-    loadSuccess = loadImgFromYAML(imagesNode, "input0", _input0Path, _input0);
+    auto logger = spdlog::get(config::STDOUT_LOGGER);
+    loadSuccess = loadImg(imagesNode, "input0", _input0, logger);
     _input0.convertTo(_input0, CV_32FC1);
-    loadSuccess = loadImgFromYAML(imagesNode, "input0_noise", _input0NoisePath, _input0Noise);
+    loadSuccess = loadImg(imagesNode, "input0_noise", _input0Noise, logger);
     _input0Noise.convertTo(_input0Noise, CV_32FC1);
-    loadSuccess = loadImgFromYAML(imagesNode, "input1", _input1Path, _input1);
-    loadSuccess = loadImgFromYAML(imagesNode, "input2", _input2Path, _input2);
-    loadSuccess = loadImgFromYAML(imagesNode, "input3", _input3Path, _input3);
+    loadSuccess = loadImg(imagesNode, "input1", _input1, logger);
+    loadSuccess = loadImg(imagesNode, "input2", _input2, logger);
+    loadSuccess = loadImg(imagesNode, "input3", _input3, logger);
 
     _configDone = loadSuccess;
 }
 
 Config::EdgeDetect::EdgeDetect(const YAML::Node& edgeDetectNode) {
     bool loadSuccess = true;
-    loadSuccess = loadParam(edgeDetectNode, "gaussian_size", _gaussianSize);
-    loadSuccess = loadParam(edgeDetectNode, "gaussian_sigma", _gaussianSigma);
-    loadSuccess = loadParam(edgeDetectNode, "lower_threshold", _lowerThreshold);
-    loadSuccess = loadParam(edgeDetectNode, "upper_threshold", _upperThreshold);
-    loadSuccess = loadParam(edgeDetectNode, "sobel_aperture_size", _sobelApertureSize);
+    auto logger = spdlog::get(config::STDOUT_LOGGER);
+    loadSuccess = loadParam(edgeDetectNode, "gaussian_size", _gaussianSize, logger);
+    loadSuccess = loadParam(edgeDetectNode, "gaussian_sigma", _gaussianSigma, logger);
+    loadSuccess = loadParam(edgeDetectNode, "lower_threshold", _lowerThreshold, logger);
+    loadSuccess = loadParam(edgeDetectNode, "upper_threshold", _upperThreshold, logger);
+    loadSuccess = loadParam(edgeDetectNode, "sobel_aperture_size", _sobelApertureSize, logger);
 
     _configDone = loadSuccess;
 }
 
 Config::HoughLines::HoughLines(const YAML::Node& houghNode) {
     bool loadSuccess = true;
-    loadSuccess = loadParam(houghNode, "rho_bin_size", _rhoBinSize);
-    loadSuccess = loadParam(houghNode, "theta_bin_size", _thetaBinSize);
-    loadSuccess = loadParam(houghNode, "threshold", _threshold);
-    loadSuccess = loadParam(houghNode, "num_peaks", _numPeaks);
+    auto logger = spdlog::get(config::STDOUT_LOGGER);
+    loadSuccess = loadParam(houghNode, "rho_bin_size", _rhoBinSize, logger);
+    loadSuccess = loadParam(houghNode, "theta_bin_size", _thetaBinSize, logger);
+    loadSuccess = loadParam(houghNode, "threshold", _threshold, logger);
+    loadSuccess = loadParam(houghNode, "num_peaks", _numPeaks, logger);
 
     _configDone = loadSuccess;
 }
 
 Config::HoughCircles::HoughCircles(const YAML::Node& houghNode) {
     bool loadSuccess = true;
-    loadSuccess = loadParam(houghNode, "min_radius", _minRadius);
-    loadSuccess = loadParam(houghNode, "max_radius", _maxRadius);
-    loadSuccess = loadParam(houghNode, "threshold", _threshold);
-    loadSuccess = loadParam(houghNode, "num_peaks", _numPeaks);
+    auto logger = spdlog::get(config::STDOUT_LOGGER);
+    loadSuccess = loadParam(houghNode, "min_radius", _minRadius, logger);
+    loadSuccess = loadParam(houghNode, "max_radius", _maxRadius, logger);
+    loadSuccess = loadParam(houghNode, "threshold", _threshold, logger);
+    loadSuccess = loadParam(houghNode, "num_peaks", _numPeaks, logger);
 
     _configDone = loadSuccess;
 }
 
 Config::Config(const std::string& configFilePath) {
-    _logger = spdlog::get("logger");
+    _logger = spdlog::get(config::STDOUT_LOGGER);
     YAML::Node config = YAML::LoadFile(configFilePath);
     if (config.IsNull()) {
         _logger->error("Could not load input file (was looking for {})", configFilePath);
@@ -98,7 +79,7 @@ bool Config::loadConfig(const YAML::Node& config) {
     // Set output path prefix
     if (config["output_dir"]) {
         _outputPathPrefix = config["output_dir"].as<std::string>();
-        if (makeDir(_outputPathPrefix)) {
+        if (common::makeDir(_outputPathPrefix)) {
             _logger->info("Created output directory at \"{}\"", _outputPathPrefix);
             madeOutputDir = true;
         }
@@ -238,13 +219,4 @@ bool Config::loadConfig(const YAML::Node& config) {
 
     _configDone = configSuccess;
     return _configDone;
-}
-
-bool Config::makeDir(const std::string& dirPath) {
-    const int dirErr = mkdir(dirPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    if (dirErr == -1) {
-        // The directory already exists, so there's nothing to do anyway. Return true
-        return errno == EEXIST;
-    }
-    return true;
 }

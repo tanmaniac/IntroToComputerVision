@@ -96,7 +96,6 @@ void harris::gpu::getCornerResponse(const cv::Mat& gradX,
            gradX.type() == gradY.type());
     assert(windowSize % 2 == 1);
 
-    auto logger = spdlog::get(config::STDOUT_LOGGER);
     auto flogger = spdlog::get(config::FILE_LOGGER);
 
     cornerResponse = cv::Mat::zeros(gradX.rows, gradX.cols, CV_32F);
@@ -146,7 +145,7 @@ void harris::gpu::getCornerResponse(const cv::Mat& gradX,
     checkCudaErrors(cudaGetLastError());
 
     timer.stop();
-    logger->info("cornerResponseKernel execution took {} ms", timer.getTime());
+    flogger->info("cornerResponseKernel execution took {} ms", timer.getTime());
 
     // Copy back to CPU
     d_cornerResponse.download(cornerResponse, stream);
@@ -230,7 +229,6 @@ void harris::gpu::refineCorners(const cv::Mat& cornerResponse,
     // Only support CV_32F right now
     assert(cornerResponse.type() == CV_32F);
 
-    auto logger = spdlog::get(config::STDOUT_LOGGER);
     auto flogger = spdlog::get(config::FILE_LOGGER);
 
     corners = cv::Mat::zeros(cornerResponse.rows, cornerResponse.cols, cornerResponse.type());
@@ -270,7 +268,7 @@ void harris::gpu::refineCorners(const cv::Mat& cornerResponse,
     checkCudaErrors(cudaGetLastError());
 
     timer.stop();
-    logger->info("refineCornersKernel execution took {} ms", timer.getTime());
+    flogger->info("refineCornersKernel execution took {} ms", timer.getTime());
 
     // Copy back to CPU
     d_corners.download(corners, stream);

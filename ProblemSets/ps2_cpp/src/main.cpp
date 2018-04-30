@@ -333,9 +333,9 @@ int main() {
     auto fileSink = std::make_shared<spdlog::sinks::simple_file_sink_mt>("ps2.log");
     sinks.push_back(colorStdoutSink);
     sinks.push_back(fileSink);
-    _logger = std::make_shared<spdlog::logger>("logger", begin(sinks), end(sinks));
+    _logger = std::make_shared<spdlog::logger>(config::STDOUT_LOGGER, begin(sinks), end(sinks));
     // File logger is just for CUDA kernel outputs
-    _fileLogger = std::make_shared<spdlog::logger>("file_logger", fileSink);
+    _fileLogger = std::make_shared<spdlog::logger>(config::FILE_LOGGER, fileSink);
     spdlog::register_logger(_logger);
     spdlog::register_logger(_fileLogger);
 

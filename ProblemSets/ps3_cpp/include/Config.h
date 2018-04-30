@@ -1,6 +1,7 @@
 #pragma once
 
 // Structures to hold runtime configurations.
+#include <common/BasicConfig.h>
 #include "FParse.h"
 
 #include <spdlog/spdlog.h>
@@ -22,40 +23,13 @@ class Config {
 private:
     std::shared_ptr<spdlog::logger> _logger, _fileLogger;
 
-    struct BasicConfig {
-        bool configDone();
-
-    protected:
-        bool _configDone = false;
-
-        template <typename T>
-        bool loadParam(const YAML::Node& node, const std::string& key, T& val) {
-            if (node[key]) {
-                val = node[key].as<T>();
-                return true;
-            }
-            auto tmpLogger = spdlog::get(config::STDOUT_LOGGER);
-            tmpLogger->error("Could not load param \"{}\"", key);
-            return false;
-        }
-    };
-
 public:
     // Structures
     struct Images : BasicConfig {
-        // Paths to each of the input images
-        std::string _picAPath, _picBPath;
         cv::Mat _picA, _picB;
 
         Images() = default;
         Images(const YAML::Node& imagesNode);
-
-    private:
-        // Load an left-right image pair from a YAML file and return whether or not it succeeded.
-        bool loadImg(const YAML::Node& node,
-                     const std::string& key,
-                     std::string& imgPath,
-                     cv::Mat& img);
     };
 
     struct Points : BasicConfig {
@@ -98,7 +72,4 @@ public:
     Config(const std::string& configFilePath);
 
     bool loadConfig(const YAML::Node& config);
-
-private:
-    bool makeDir(const std::string& dirPath);
 };
