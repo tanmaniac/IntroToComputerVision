@@ -1,4 +1,5 @@
 #include "../include/Config.h"
+#include <common/Utils.h>
 
 #include <opencv2/imgcodecs.hpp>
 
@@ -7,39 +8,17 @@
 #include <iterator>
 #include <sstream>
 
-bool Config::BasicConfig::configDone() {
-    return _configDone;
-}
-
 Config::Images::Images(const YAML::Node& imagesNode) {
     bool loadSuccess = true;
-    loadSuccess = loadImg(imagesNode, "transA.jpg", _transA);
-    loadSuccess = loadImg(imagesNode, "transB.jpg", _transB);
-    loadSuccess = loadImg(imagesNode, "simA.jpg", _simA);
-    loadSuccess = loadImg(imagesNode, "simB.jpg", _simB);
-    loadSuccess = loadImg(imagesNode, "check.bmp", _check);
-    loadSuccess = loadImg(imagesNode, "check_rot.bmp", _checkRot);
+    auto tmpLogger = spdlog::get(config::FILE_LOGGER);
+    loadSuccess = loadImg(imagesNode, "transA.jpg", _transA, tmpLogger);
+    loadSuccess = loadImg(imagesNode, "transB.jpg", _transB, tmpLogger);
+    loadSuccess = loadImg(imagesNode, "simA.jpg", _simA, tmpLogger);
+    loadSuccess = loadImg(imagesNode, "simB.jpg", _simB, tmpLogger);
+    loadSuccess = loadImg(imagesNode, "check.bmp", _check, tmpLogger);
+    loadSuccess = loadImg(imagesNode, "check_rot.bmp", _checkRot, tmpLogger);
 
     _configDone = loadSuccess;
-}
-
-bool Config::Images::loadImg(const YAML::Node& node, const std::string& key, cv::Mat& img) {
-    bool loadSuccess = false;
-    auto tmpLogger = spdlog::get(config::FILE_LOGGER);
-    std::string imgPath;
-    if (node[key]) {
-        imgPath = node[key].as<std::string>();
-        img = cv::imread(imgPath, cv::IMREAD_UNCHANGED);
-        if (!img.empty()) {
-            loadSuccess = true;
-        } else {
-            tmpLogger->error("Could not load image \"{}\"", imgPath);
-        }
-    } else {
-        tmpLogger->error("Could not find YAML key \"{}\"", key);
-    }
-    tmpLogger->info("Loaded image from {}", imgPath);
-    return loadSuccess;
 }
 
 Config::Config(const std::string& configFilePath) {
@@ -61,12 +40,13 @@ Config::Config(const std::string& configFilePath) {
 
 Config::Harris::Harris(const YAML::Node& harrisNode) {
     bool loadSuccess = true;
-    loadSuccess = loadParam(harrisNode, "sobel_kernel_size", _sobelKernelSize);
-    loadSuccess = loadParam(harrisNode, "window_size", _windowSize);
-    loadSuccess = loadParam(harrisNode, "gaussian_sigma", _gaussianSigma);
-    loadSuccess = loadParam(harrisNode, "alpha", _alpha);
-    loadSuccess = loadParam(harrisNode, "response_threshold", _responseThresh);
-    loadSuccess = loadParam(harrisNode, "min_distance", _minDistance);
+    auto tmpLogger = spdlog::get(config::FILE_LOGGER);
+    loadSuccess = loadParam(harrisNode, "sobel_kernel_size", _sobelKernelSize, tmpLogger);
+    loadSuccess = loadParam(harrisNode, "window_size", _windowSize, tmpLogger);
+    loadSuccess = loadParam(harrisNode, "gaussian_sigma", _gaussianSigma, tmpLogger);
+    loadSuccess = loadParam(harrisNode, "alpha", _alpha, tmpLogger);
+    loadSuccess = loadParam(harrisNode, "response_threshold", _responseThresh, tmpLogger);
+    loadSuccess = loadParam(harrisNode, "min_distance", _minDistance, tmpLogger);
 
     _configDone = loadSuccess;
 }
@@ -81,7 +61,7 @@ bool Config::loadConfig(const YAML::Node& config) {
     // Set output path prefix
     if (config["output_dir"]) {
         _outputPathPrefix = config["output_dir"].as<std::string>();
-        if (makeDir(_outputPathPrefix)) {
+        if (common::makeDir(_outputPathPrefix)) {
             _logger->info("Created output directory at \"{}\"", _outputPathPrefix);
             madeOutputDir = true;
         }
@@ -145,13 +125,4 @@ bool Config::loadConfig(const YAML::Node& config) {
 
     _configDone = configSuccess;
     return _configDone;
-}
-
-bool Config::makeDir(const std::string& dirPath) {
-    const int dirErr = mkdir(dirPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    if (dirErr == -1) {
-        // The directory already exists, so there's nothing to do anyway. Return true
-        return errno == EEXIST;
-    }
-    return true;
 }

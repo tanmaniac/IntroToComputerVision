@@ -1,6 +1,9 @@
 #pragma once
 
 // Structures to hold runtime configurations.
+#include <common/BasicConfig.h>
+#include <common/Utils.h>
+
 #include <spdlog/spdlog.h>
 #include <yaml-cpp/yaml.h>
 
@@ -20,24 +23,6 @@ class Config {
 private:
     std::shared_ptr<spdlog::logger> _logger, _fileLogger;
 
-    struct BasicConfig {
-        bool configDone();
-
-    protected:
-        bool _configDone = false;
-
-        template <typename T>
-        bool loadParam(const YAML::Node& node, const std::string& key, T& val) {
-            if (node[key]) {
-                val = node[key].as<T>();
-                return true;
-            }
-            auto tmpLogger = spdlog::get(config::STDOUT_LOGGER);
-            tmpLogger->error("Could not load param \"{}\"", key);
-            return false;
-        }
-    };
-
 public:
     // Structures
     struct Images : BasicConfig {
@@ -46,10 +31,6 @@ public:
 
         Images() = default;
         Images(const YAML::Node& imagesNode);
-
-    private:
-        // Load image from a YAML file and return whether or not it succeeded.
-        bool loadImg(const YAML::Node& node, const std::string& key, cv::Mat& img);
     };
 
     struct Harris : BasicConfig {
@@ -76,7 +57,4 @@ public:
     Config(const std::string& configFilePath);
 
     bool loadConfig(const YAML::Node& config);
-
-private:
-    bool makeDir(const std::string& dirPath);
 };
