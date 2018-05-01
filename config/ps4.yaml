@@ -20,14 +20,14 @@ harris_trans:
   window_size: 5
   gaussian_sigma: 1.5
   alpha: 0.05
-  response_threshold: 10000000
+  response_threshold: 5000000000
   min_distance: 5
 
 harris_sim:
   sobel_kernel_size: 3
   window_size: 5
-  gaussian_sigma: 1
+  gaussian_sigma: 1.5
   alpha: 0.05
-  response_threshold: 10000000
+  response_threshold: 1000000000
   min_distance: 5
 ...

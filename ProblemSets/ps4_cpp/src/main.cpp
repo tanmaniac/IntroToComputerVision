@@ -26,5 +26,7 @@ int main() {
     _fileLogger->info("GPU warmup done");
 
     Config config(CONFIG_FILE_PATH);
-    solution::runProblem1(config);
+    Solution sol(config);
+    sol.runProblem1();
+    sol.runProblem2();
 }

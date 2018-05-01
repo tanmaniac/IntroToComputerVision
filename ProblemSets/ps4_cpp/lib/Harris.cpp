@@ -99,7 +99,8 @@ void harris::cpu::getCornerResponse(const cv::Mat& gradX,
 void harris::cpu::refineCorners(const cv::Mat& cornerResponse,
                                 const double threshold,
                                 const int minDistance,
-                                cv::Mat& corners) {
+                                cv::Mat& corners,
+                                std::vector<std::pair<int, int>>& cornerLocs) {
     // Only support CV_32F right now
     assert(cornerResponse.type() == CV_32F);
 
@@ -134,10 +135,13 @@ void harris::cpu::refineCorners(const cv::Mat& cornerResponse,
                 }
                 if (isLocalMax) {
                     corners.at<float>(y, x) = crVal;
+                    cornerLocs.push_back(std::make_pair(y, x));
                     // This is a local maxima, so we can skip ahead in the row search
                     x += (minDistance - 1);
                 }
             }
         }
     }
+
+    flogger->info("Found {} corners", cornerLocs.size());
 }
