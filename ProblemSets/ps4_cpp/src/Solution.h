@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../include/Config.h"
+#include "../include/RANSAC.h"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/types.hpp>
@@ -11,6 +12,7 @@ public:
 
     void runProblem1();
     void runProblem2();
+    void runProblem3();
 
 private:
     // Helpful struct to hold problem set configurations for Harris corners problems, so that we
@@ -26,9 +28,10 @@ private:
             _matchesImgPath;
 
         // Filled when Harris functions are run
-        cv::Mat _gradientX, _gradientY, _cornerResponse, _corners, _angles;
+        cv::Mat _gradientX, _gradientY, _cornerResponse, _corners, _angles, _drawnKeypoints;
         std::vector<std::pair<int, int>> _cornerLocs;
         std::vector<cv::KeyPoint> _keypoints;
+        std::vector<cv::DMatch> _goodMatches;
 
         FeaturesContainer(const cv::Mat& input,
                           const Config::Harris& config,
@@ -44,6 +47,8 @@ private:
               _keypointsImgPath(keypointsImgPath), _matchesImgPath(matchesImgPath) {}
     };
 
+    const Config& _config;
+
     std::vector<FeaturesContainer> _featConts;
 
     // Draw dots given by an input mask onto an image
@@ -54,4 +59,11 @@ private:
 
     // Find SIFT descriptors
     void siftHelper(FeaturesContainer& img1, FeaturesContainer& img2);
+
+    // Compute best fit model
+    std::tuple<cv::Mat, std::vector<int>, double> ransacHelper(FeaturesContainer& img1,
+                                                               FeaturesContainer& img2,
+                                                               ransac::TransformType whichRansac,
+                                                               const Config::RANSAC& settings,
+                                                               const std::string& outputPath);
 };

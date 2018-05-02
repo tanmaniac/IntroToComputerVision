@@ -42,15 +42,25 @@ public:
         Harris(const YAML::Node& harrisNode);
     };
 
+    struct RANSAC : BasicConfig {
+        int _reprojThresh, _maxIters;
+        double _minConsensusRatio;
+
+        RANSAC() = default;
+        RANSAC(const YAML::Node& ransacNode);
+    };
+
     Images _images;
     bool _useGpu = false;
     // Settings for Harris operator for the transA and simA images, respectively
     Harris _harrisTrans, _harrisSim;
+    // Settings for RANSAC when searching for translation, similarity, and affine transformations
+    RANSAC _trans, _sim, _affine;
 
     // Path to which output images will be written
     std::string _outputPathPrefix;
     // Seed for mersenne twister engine
-    std::unique_ptr<std::seed_seq> _mersenneSeed;
+    std::shared_ptr<std::seed_seq> _mersenneSeed;
 
     bool _configDone = false;
 

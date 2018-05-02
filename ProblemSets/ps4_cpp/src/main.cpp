@@ -29,4 +29,5 @@ int main() {
     Solution sol(config);
     sol.runProblem1();
     sol.runProblem2();
+    sol.runProblem3();
 }

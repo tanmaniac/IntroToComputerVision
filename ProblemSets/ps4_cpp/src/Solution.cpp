@@ -2,6 +2,7 @@
 #include "../include/Descriptors.h"
 #include "../include/Harris.h"
 
+#include <spdlog/fmt/ostr.h>
 #include <spdlog/spdlog.h>
 
 #include <opencv2/features2d/features2d.hpp>
@@ -12,7 +13,7 @@
 #include <vector>
 
 // Constructor
-Solution::Solution(const Config& config) {
+Solution::Solution(const Config& config) : _config(config) {
     // Emplace back configurations
     _featConts.emplace_back(config._images._transA,
                             config._harrisTrans,
@@ -143,21 +144,21 @@ void Solution::siftHelper(FeaturesContainer& img1, FeaturesContainer& img2) {
         img2._gradientX, img2._gradientY, img2._cornerLocs, SIFT_WINDOW_SIZE, img2._keypoints);
 
     // Draw keypoints on each image
-    cv::Mat keypointsImg1 = img1._input.clone();
-    cv::Mat keypointsImg2 = img2._input.clone();
-    cv::drawKeypoints(keypointsImg1,
+    img1._drawnKeypoints = img1._input.clone();
+    img2._drawnKeypoints = img2._input.clone();
+    cv::drawKeypoints(img1._drawnKeypoints,
                       img1._keypoints,
-                      keypointsImg1,
+                      img1._drawnKeypoints,
                       cv::Scalar::all(-1),
                       cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-    cv::drawKeypoints(keypointsImg2,
+    cv::drawKeypoints(img2._drawnKeypoints,
                       img2._keypoints,
-                      keypointsImg2,
+                      img2._drawnKeypoints,
                       cv::Scalar::all(-1),
                       cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
     // Concatenate the two images and draw the output
     cv::Mat keypointsCombined;
-    cv::hconcat(keypointsImg1, keypointsImg2, keypointsCombined);
+    cv::hconcat(img1._drawnKeypoints, img2._drawnKeypoints, keypointsCombined);
     cv::imwrite(img1._outPrefix + img1._keypointsImgPath, keypointsCombined);
     logger->info("Found keypoints and drew to {}", img1._keypointsImgPath);
 
@@ -170,29 +171,31 @@ void Solution::siftHelper(FeaturesContainer& img1, FeaturesContainer& img2) {
     // Match descriptors
     auto matcher = cv::BFMatcher::create();
 
-    std::vector<cv::DMatch> matches;
+    img1._goodMatches.clear();
+    img2._goodMatches.clear();
     // Use KNN to find 2 matches for each point so we can apply the ratio test from the original
     // SIFT paper (https://people.eecs.berkeley.edu/~malik/cs294/lowe-ijcv04.pdf)
     std::vector<std::vector<cv::DMatch>> rawMatches;
     matcher->knnMatch(descriptorsImg1, descriptorsImg2, rawMatches, 2);
     for (const auto& matchPair : rawMatches) {
         if (matchPair[0].distance < 0.75 * matchPair[1].distance) {
-            matches.push_back(matchPair[0]);
+            img1._goodMatches.push_back(matchPair[0]);
         }
     }
+    // Copy good matches from img1 to img2
+    img2._goodMatches = img1._goodMatches;
 
     // Create image with lines drawn between matched points. As we iterate through each point, log
     // its info
     cv::Mat combinedSrc;
-    cv::hconcat(img1._input, img2._input, combinedSrc);
-    cv::cvtColor(combinedSrc, combinedSrc, cv::COLOR_GRAY2RGB);
+    cv::hconcat(img1._drawnKeypoints, img2._drawnKeypoints, combinedSrc);
     std::stringstream ss;
     ss << "\nMatches:";
     cv::RNG rng(12345);
-    for (const auto& match : matches) {
+    for (const auto& match : img1._goodMatches) {
         cv::KeyPoint k1 = img1._keypoints[match.queryIdx];
         cv::KeyPoint k2 = img2._keypoints[match.trainIdx];
-        int xOffset = img1._input.cols;
+        int xOffset = img1._drawnKeypoints.cols;
         cv::line(combinedSrc,
                  k1.pt,
                  cv::Point2f(k2.pt.x + xOffset, k2.pt.y),
@@ -202,8 +205,51 @@ void Solution::siftHelper(FeaturesContainer& img1, FeaturesContainer& img2) {
     }
     flogger->info("{}", ss.str());
     cv::imwrite(img1._outPrefix + img1._matchesImgPath, combinedSrc);
-    logger->info(
-        "Found {} good matches; drew match pairs to {}", matches.size(), img1._matchesImgPath);
+    logger->info("Found {} good matches; drew match pairs to {}",
+                 img1._goodMatches.size(),
+                 img1._matchesImgPath);
+}
+
+std::tuple<cv::Mat, std::vector<int>, double>
+    Solution::ransacHelper(FeaturesContainer& img1,
+                           FeaturesContainer& img2,
+                           ransac::TransformType whichRansac,
+                           const Config::RANSAC& settings,
+                           const std::string& outputPath) {
+    auto logger = spdlog::get(config::STDOUT_LOGGER);
+    // Iterate over the good matches in the trans images and build up a list of matching points
+    std::vector<cv::Point2f> transAPts, transBPts;
+    for (const auto& match : img1._goodMatches) {
+        transAPts.emplace_back(img1._keypoints[match.queryIdx].pt);
+        transBPts.emplace_back(img2._keypoints[match.trainIdx].pt);
+    }
+
+    cv::Mat transform;
+    std::vector<int> consensusSet;
+    double consensusRatio;
+    std::tie(transform, consensusSet, consensusRatio) = ransac::solve(transAPts,
+                                                                      transBPts,
+                                                                      whichRansac,
+                                                                      settings._reprojThresh,
+                                                                      settings._maxIters,
+                                                                      settings._minConsensusRatio);
+
+    logger->info("\nBest transform =\n{}\nwith consensus ratio {}", transform, consensusRatio);
+
+    // Draw that shit
+    cv::Mat combinedSrc;
+    cv::hconcat(img1._input, img2._input, combinedSrc);
+    cv::cvtColor(combinedSrc, combinedSrc, cv::COLOR_GRAY2RGB);
+    cv::RNG rng(12345);
+    for (const int& idx : consensusSet) {
+        cv::line(combinedSrc,
+                 transAPts[idx],
+                 cv::Point2f(transBPts[idx].x + img1._input.cols, transBPts[idx].y),
+                 cv::Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)));
+    }
+    cv::imwrite(_config._outputPathPrefix + outputPath, combinedSrc);
+
+    return std::make_tuple(transform, consensusSet, consensusRatio);
 }
 
 void Solution::runProblem1() {
@@ -234,4 +280,83 @@ void Solution::runProblem2() {
     auto finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> runtime = finish - start;
     logger->info("Problem 2 runtime = {} ms", runtime.count());
+}
+
+void Solution::runProblem3() {
+    // Time runtime
+    auto logger = spdlog::get(config::STDOUT_LOGGER);
+    logger->info("Problem 3 begins");
+    auto start = std::chrono::high_resolution_clock::now();
+
+    // Seed RANSAC's RNG first
+    ransac::seed(_config._mersenneSeed);
+
+    logger->info("RANSAC for a translation:");
+    ransacHelper(_featConts[0],
+                 _featConts[1],
+                 ransac::TransformType::TRANSLATION,
+                 _config._trans,
+                 "/ps4-3-a-1.png");
+
+    {
+        // Now compute transform for sim images
+        cv::Mat transform;
+        std::vector<int> consensusSet;
+        double consensusRatio;
+        logger->info("RANSAC for a similarity transformation:");
+        std::tie(transform, consensusSet, consensusRatio) =
+            ransacHelper(_featConts[2],
+                         _featConts[3],
+                         ransac::TransformType::SIMILARITY,
+                         _config._sim,
+                         "/ps4-3-b-1.png");
+
+        // Invert the transform to so we can warp the simB image back to simA
+        cv::invertAffineTransform(transform, transform);
+
+        cv::Mat simA = _featConts[2]._input.clone();
+        cv::Mat simB = _featConts[3]._input.clone();
+        cv::Mat reverseWarp = cv::Mat::zeros(simB.rows, simB.cols, simB.type());
+
+        // Do the warp
+        cv::warpAffine(simB, reverseWarp, transform, reverseWarp.size());
+
+        // Blend with original
+        cv::Mat blended = simA * 0.5 + reverseWarp * 0.5;
+
+        cv::imwrite(_config._outputPathPrefix + "/ps4-3-d-1.png", blended);
+    }
+
+    {
+        // Try with affine transform
+        cv::Mat transform;
+        std::vector<int> consensusSet;
+        double consensusRatio;
+        logger->info("RANSAC for an affine transformation:");
+        std::tie(transform, consensusSet, consensusRatio) =
+            ransacHelper(_featConts[2],
+                         _featConts[3],
+                         ransac::TransformType::AFFINE,
+                         _config._affine,
+                         "/ps4-3-c-1.png");
+
+        // Invert the transform to so we can warp the simB image back to simA
+        cv::invertAffineTransform(transform, transform);
+
+        cv::Mat simA = _featConts[2]._input.clone();
+        cv::Mat simB = _featConts[3]._input.clone();
+        cv::Mat reverseWarp = cv::Mat::zeros(simB.rows, simB.cols, simB.type());
+
+        // Do the warp
+        cv::warpAffine(simB, reverseWarp, transform, reverseWarp.size());
+
+        // Blend with original
+        cv::Mat blended = simA * 0.5 + reverseWarp * 0.5;
+
+        cv::imwrite(_config._outputPathPrefix + "/ps4-3-e-1.png", blended);
+    }
+
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> runtime = finish - start;
+    logger->info("Problem 3 runtime = {} ms", runtime.count());
 }
