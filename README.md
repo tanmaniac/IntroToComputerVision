@@ -13,9 +13,12 @@ I try to accelerate all of the assignments with CUDA, so you will need an Nvidia
 
 Follow [Nvidia's CUDA installation instructions](http://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html) to install CUDA. 
 
+[Git LFS](https://git-lfs.github.com/) is also required to clone the images and lecture slides.
+
 From here, there are two options: building in **Docker** or just building locally on a host machine.
 
 ### Containerized Build in Docker
+This is the recommended approach to building this project since all of the dependencies are included in the Docker image.
 
 - Install Docker-CE as described for your distribution on the [Docker docs](https://docs.docker.com/install/).
     - Follow the [Optional Linux post-installation](https://docs.docker.com/install/linux/linux-postinstall/) steps to run Docker without `sudo`.
@@ -23,6 +26,7 @@ From here, there are two options: building in **Docker** or just building locall
 - Clone this repo and build/run the Docker container:
 
 ```bash
+git clone --recursive https://github.com/tanmaniac/IntroToComputerVision.git
 cd IntroToComputerVision/Docker
 # Build the Docker container
 ./build.sh
@@ -35,6 +39,7 @@ This will drop you into a shell where you can follow the build steps below. The 
 ### Build on host
 
 - Build OpenCV 3.4.1 as directed in the OpenCV documentation. Make sure to add the `-DWITH_CUDA=ON` CMake flag to compile CUDA features.
+- Install [Eigen](http://eigen.tuxfamily.org/) as described in its documentation.
 
 ## Building
 
