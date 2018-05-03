@@ -14,6 +14,13 @@
 #include <opencv2/core/opengl.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include <thrust/copy.h>
+#include <thrust/device_vector.h>
+#include <thrust/execution_policy.h>
+#include <thrust/functional.h>
+#include <thrust/iterator/counting_iterator.h>
+#include <thrust/iterator/permutation_iterator.h>
+
 // Num cols each thread processes for non-maximum suppression
 static constexpr size_t NMS_COLS_PER_THREAD = 32;
 
@@ -222,10 +229,22 @@ struct GreaterOrEqual {
     }
 };
 
+// Model of Unary Function that converts a 1D index to a 2D (y, x) coordinate
+struct Conv1Dto2D : public thrust::unary_function<int, thrust::pair<int, int>> {
+    const size_t _rows, _cols;
+
+    Conv1Dto2D(const size_t rows, const size_t cols) : _rows(rows), _cols(cols) {}
+
+    __host__ __device__ thrust::pair<int, int> operator()(int idx) {
+        return thrust::make_pair(idx / _cols, idx % _cols);
+    }
+};
+
 void harris::gpu::refineCorners(const cv::Mat& cornerResponse,
                                 const double threshold,
                                 const int minDistance,
-                                cv::Mat& corners) {
+                                cv::Mat& corners,
+                                std::vector<std::pair<int, int>>& cornerLocs) {
     // Only support CV_32F right now
     assert(cornerResponse.type() == CV_32F);
 
@@ -270,6 +289,41 @@ void harris::gpu::refineCorners(const cv::Mat& cornerResponse,
     timer.stop();
     flogger->info("refineCornersKernel execution took {} ms", timer.getTime());
 
+    // Stream compact the found corners into a vector of coordinates. First we wrap the d_corners
+    // matrix in a Thrust iterator
+    auto cornersBegin = GpuMatBeginItr<float>(d_corners);
+    auto cornersEnd = GpuMatEndItr<float>(d_corners);
+
+    // Get the nonzero indices in the corner matrix
+    int numVals = d_corners.rows * d_corners.cols;
+    thrust::device_vector<int> nonzeroIndices(numVals);
+    auto nonzeroEnd =
+        thrust::copy_if(thrust::system::cuda::par.on(cv::cuda::StreamAccessor::getStream(stream)),
+                        thrust::make_counting_iterator(0),
+                        thrust::make_counting_iterator(numVals),
+                        cornersBegin,
+                        nonzeroIndices.begin(),
+                        thrust::placeholders::_1 > 0.f);
+
+    int numNonzero = nonzeroEnd - nonzeroIndices.begin();
+    nonzeroIndices.resize(numNonzero);
+
+    // Convert those 1D indices to 2D indices
+    thrust::device_vector<thrust::pair<int, int>> d_cornerLocs(numNonzero);
+    Conv1Dto2D conv(d_corners.rows, d_corners.cols);
+    thrust::transform(thrust::system::cuda::par.on(cv::cuda::StreamAccessor::getStream(stream)),
+                      nonzeroIndices.begin(),
+                      nonzeroIndices.end(),
+                      d_cornerLocs.begin(),
+                      conv);
+
     // Copy back to CPU
     d_corners.download(corners, stream);
+
+    // Resize cornerLocs output and copy to host
+    cornerLocs.resize(numNonzero);
+    for (size_t i = 0; i < d_cornerLocs.size(); i++) {
+        thrust::pair<int, int> curPair(d_cornerLocs[i]);
+        cornerLocs[i] = std::make_pair(curPair.first, curPair.second);
+    }
 }

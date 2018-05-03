@@ -19,15 +19,30 @@ harris_trans:
   sobel_kernel_size: 3
   window_size: 5
   gaussian_sigma: 1.5
-  alpha: 0.05
-  response_threshold: 10000000
+  alpha: 0.04
+  response_threshold: 500000000
   min_distance: 5
 
 harris_sim:
   sobel_kernel_size: 3
   window_size: 5
-  gaussian_sigma: 1
-  alpha: 0.05
-  response_threshold: 10000000
+  gaussian_sigma: 1.5
+  alpha: 0.04
+  response_threshold: 500000000
   min_distance: 5
+
+ransac_trans:
+  reprojection_threshold: 10
+  max_iterations: 2000
+  consensus_ratio: 0.2
+
+ransac_sim:
+  reprojection_threshold: 6
+  max_iterations: 2000
+  consensus_ratio: 0.6
+
+ransac_affine:
+  reprojection_threshold: 6
+  max_iterations: 2000
+  consensus_ratio: 0.6
 ...

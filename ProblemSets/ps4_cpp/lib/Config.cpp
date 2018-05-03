@@ -51,6 +51,16 @@ Config::Harris::Harris(const YAML::Node& harrisNode) {
     _configDone = loadSuccess;
 }
 
+Config::RANSAC::RANSAC(const YAML::Node& ransacNode) {
+    bool loadSuccess = true;
+    auto tmpLogger = spdlog::get(config::FILE_LOGGER);
+    loadSuccess = loadParam(ransacNode, "reprojection_threshold", _reprojThresh, tmpLogger);
+    loadSuccess = loadParam(ransacNode, "max_iterations", _maxIters, tmpLogger);
+    loadSuccess = loadParam(ransacNode, "consensus_ratio", _minConsensusRatio, tmpLogger);
+
+    _configDone = loadSuccess;
+}
+
 bool Config::loadConfig(const YAML::Node& config) {
     // Load images
     if (YAML::Node imagesNode = config["images"]) {
@@ -82,8 +92,7 @@ bool Config::loadConfig(const YAML::Node& config) {
             seedVals.push_back(i);
         }
 
-        _mersenneSeed =
-            std::unique_ptr<std::seed_seq>(new std::seed_seq(seedVals.begin(), seedVals.end()));
+        _mersenneSeed = std::make_shared<std::seed_seq>(seedVals.begin(), seedVals.end());
         std::stringstream ss;
         ss << std::hex;
         _mersenneSeed->param(std::ostream_iterator<uint32_t>(ss, " "));
@@ -107,6 +116,15 @@ bool Config::loadConfig(const YAML::Node& config) {
     if (YAML::Node harrisNode = config["harris_sim"]) {
         _harrisSim = Harris(harrisNode);
     }
+    if (YAML::Node node = config["ransac_trans"]) {
+        _trans = RANSAC(node);
+    }
+    if (YAML::Node node = config["ransac_sim"]) {
+        _sim = RANSAC(node);
+    }
+    if (YAML::Node node = config["ransac_affine"]) {
+        _affine = RANSAC(node);
+    }
 
     bool configSuccess = true;
     // Verify that configurations were successful
@@ -120,6 +138,18 @@ bool Config::loadConfig(const YAML::Node& config) {
     }
     if (!_harrisSim.configDone()) {
         _logger->error("Could not load parameters for Harris operator of sim image set!");
+        configSuccess = false;
+    }
+    if (!_trans.configDone()) {
+        _logger->error("Could not load parameters to solve RANSAC for translation!");
+        configSuccess = false;
+    }
+    if (!_sim.configDone()) {
+        _logger->error("Could not load parameters to solve RANSAC for similarity!");
+        configSuccess = false;
+    }
+    if (!_affine.configDone()) {
+        _logger->error("Could not load parameters to solve RANSAC for affine transformation!");
         configSuccess = false;
     }
 

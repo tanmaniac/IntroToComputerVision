@@ -48,11 +48,13 @@ void getCornerResponse(const cv::Mat& gradX,
  * \param threshold Minimum corner response threshold allowed to be called a corner
  * \param minDistance Minimum distance (x and y) between returned corners
  * \param corners Output with strongest corners marked
+ * \param cornerLocs (y, x) coordinates for each corner
  */
 void refineCorners(const cv::Mat& cornerResponse,
                    const double threshold,
                    const int minDistance,
-                   cv::Mat& corners);
+                   cv::Mat& corners,
+                   std::vector<std::pair<int, int>>& cornerLocs);
 }; // namespace cpu
 
 namespace gpu {
@@ -90,6 +92,7 @@ void getCornerResponse(const cv::Mat& gradX,
 void refineCorners(const cv::Mat& cornerResponse,
                    const double threshold,
                    const int minDistance,
-                   cv::Mat& corners);
+                   cv::Mat& corners,
+                   std::vector<std::pair<int, int>>& cornerLocs);
 }; // namespace gpu
 }; // namespace harris
