@@ -1,0 +1,289 @@
+[2018-05-03 14:03:58.508] [file_logger] [info] GPU warmup done
+[2018-05-03 14:03:58.513] [file_logger] [info] Loaded image from ../Resources/ProblemSet4/transA.jpg
+[2018-05-03 14:03:58.516] [file_logger] [info] Loaded image from ../Resources/ProblemSet4/transB.jpg
+[2018-05-03 14:03:58.520] [file_logger] [info] Loaded image from ../Resources/ProblemSet4/simA.jpg
+[2018-05-03 14:03:58.524] [file_logger] [info] Loaded image from ../Resources/ProblemSet4/simB.jpg
+[2018-05-03 14:03:58.524] [file_logger] [info] Loaded image from ../Resources/ProblemSet4/check.bmp
+[2018-05-03 14:03:58.524] [file_logger] [info] Loaded image from ../Resources/ProblemSet4/check_rot.bmp
+[2018-05-03 14:03:58.524] [logger] [info] Created output directory at "./ps4_output"
+[2018-05-03 14:03:58.525] [file_logger] [info] Using random seed 16 38 c7 e4 6a a2 d8 cc 96 f6 fe f1 4b 7d a7 25 
+[2018-05-03 14:03:58.525] [logger] [info] Using GPU for compute
+[2018-05-03 14:03:58.525] [logger] [info] Loaded runtime configuration from "../config/ps4.yaml"
+[2018-05-03 14:03:58.525] [logger] [info] Problem 1 begins
+[2018-05-03 14:03:59.023] [file_logger] [info] Stream successfully copied data to GPU
+[2018-05-03 14:03:59.052] [logger] [info] Computed gradients and wrote to /ps4-1-a-1.png
+[2018-05-03 14:03:59.053] [file_logger] [info] Resized cornerResponse to match gradient sizes: 480 rows x 640 cols
+[2018-05-03 14:03:59.055] [file_logger] [info] Stream successfully copied data to GPU
+[2018-05-03 14:03:59.056] [file_logger] [info] Launching cornerResponseKernel
+[2018-05-03 14:03:59.056] [file_logger] [info] cornerResponseKernel execution took 0.851968 ms
+[2018-05-03 14:03:59.061] [logger] [info] Computed corner responses and wrote to /ps4-1-b-1.png
+[2018-05-03 14:03:59.062] [file_logger] [info] Resized corners to match input size: 480 rows x 640 cols
+[2018-05-03 14:03:59.062] [file_logger] [info] Stream successfully copied data to GPU
+[2018-05-03 14:03:59.062] [file_logger] [info] Launching refineCornersKernel
+[2018-05-03 14:03:59.063] [file_logger] [info] refineCornersKernel execution took 0.703328 ms
+[2018-05-03 14:03:59.094] [logger] [info] Computed Harris corners and and wrote to /ps4-1-c-1.png
+[2018-05-03 14:03:59.095] [file_logger] [info] Stream successfully copied data to GPU
+[2018-05-03 14:03:59.115] [logger] [info] Computed gradients and wrote to /ps4-1-a-3.png
+[2018-05-03 14:03:59.115] [file_logger] [info] Resized cornerResponse to match gradient sizes: 480 rows x 640 cols
+[2018-05-03 14:03:59.116] [file_logger] [info] Stream successfully copied data to GPU
+[2018-05-03 14:03:59.117] [file_logger] [info] Launching cornerResponseKernel
+[2018-05-03 14:03:59.118] [file_logger] [info] cornerResponseKernel execution took 0.7968 ms
+[2018-05-03 14:03:59.121] [logger] [info] Computed corner responses and wrote to /ps4-1-b-2.png
+[2018-05-03 14:03:59.122] [file_logger] [info] Resized corners to match input size: 480 rows x 640 cols
+[2018-05-03 14:03:59.122] [file_logger] [info] Stream successfully copied data to GPU
+[2018-05-03 14:03:59.122] [file_logger] [info] Launching refineCornersKernel
+[2018-05-03 14:03:59.123] [file_logger] [info] refineCornersKernel execution took 0.68416 ms
+[2018-05-03 14:03:59.143] [logger] [info] Computed Harris corners and and wrote to /ps4-1-c-2.png
+[2018-05-03 14:03:59.143] [file_logger] [info] Stream successfully copied data to GPU
+[2018-05-03 14:03:59.157] [logger] [info] Computed gradients and wrote to /ps4-1-a-2.png
+[2018-05-03 14:03:59.157] [file_logger] [info] Resized cornerResponse to match gradient sizes: 480 rows x 640 cols
+[2018-05-03 14:03:59.158] [file_logger] [info] Stream successfully copied data to GPU
+[2018-05-03 14:03:59.158] [file_logger] [info] Launching cornerResponseKernel
+[2018-05-03 14:03:59.159] [file_logger] [info] cornerResponseKernel execution took 0.79664 ms
+[2018-05-03 14:03:59.162] [logger] [info] Computed corner responses and wrote to /ps4-1-b-3.png
+[2018-05-03 14:03:59.162] [file_logger] [info] Resized corners to match input size: 480 rows x 640 cols
+[2018-05-03 14:03:59.163] [file_logger] [info] Stream successfully copied data to GPU
+[2018-05-03 14:03:59.163] [file_logger] [info] Launching refineCornersKernel
+[2018-05-03 14:03:59.164] [file_logger] [info] refineCornersKernel execution took 0.96256 ms
+[2018-05-03 14:03:59.184] [logger] [info] Computed Harris corners and and wrote to /ps4-1-c-3.png
+[2018-05-03 14:03:59.184] [file_logger] [info] Stream successfully copied data to GPU
+[2018-05-03 14:03:59.199] [logger] [info] Computed gradients and wrote to /ps4-1-a-4.png
+[2018-05-03 14:03:59.199] [file_logger] [info] Resized cornerResponse to match gradient sizes: 480 rows x 640 cols
+[2018-05-03 14:03:59.200] [file_logger] [info] Stream successfully copied data to GPU
+[2018-05-03 14:03:59.200] [file_logger] [info] Launching cornerResponseKernel
+[2018-05-03 14:03:59.204] [file_logger] [info] cornerResponseKernel execution took 2.1264 ms
+[2018-05-03 14:03:59.207] [logger] [info] Computed corner responses and wrote to /ps4-1-b-4.png
+[2018-05-03 14:03:59.207] [file_logger] [info] Resized corners to match input size: 480 rows x 640 cols
+[2018-05-03 14:03:59.207] [file_logger] [info] Stream successfully copied data to GPU
+[2018-05-03 14:03:59.208] [file_logger] [info] Launching refineCornersKernel
+[2018-05-03 14:03:59.208] [file_logger] [info] refineCornersKernel execution took 0.589216 ms
+[2018-05-03 14:03:59.228] [logger] [info] Computed Harris corners and and wrote to /ps4-1-c-4.png
+[2018-05-03 14:03:59.228] [logger] [info] Problem 1 runtime = 702.944 ms
+[2018-05-03 14:03:59.228] [logger] [info] Problem 2 begins
+[2018-05-03 14:03:59.261] [logger] [info] Found keypoints and drew to /ps4-2-a-1.png
+[2018-05-03 14:03:59.309] [file_logger] [info] 
+Matches:
+queryIdx=23; trainIdx=4; distance=186.944
+queryIdx=24; trainIdx=12; distance=257.276
+queryIdx=28; trainIdx=8; distance=217.516
+queryIdx=30; trainIdx=12; distance=115.65
+queryIdx=38; trainIdx=15; distance=89.7942
+queryIdx=45; trainIdx=22; distance=75.0267
+queryIdx=47; trainIdx=21; distance=107.717
+queryIdx=50; trainIdx=26; distance=185.532
+queryIdx=52; trainIdx=24; distance=128.07
+queryIdx=53; trainIdx=27; distance=60.8112
+queryIdx=56; trainIdx=30; distance=154.331
+queryIdx=57; trainIdx=24; distance=126.361
+queryIdx=61; trainIdx=36; distance=215.328
+queryIdx=62; trainIdx=32; distance=199
+queryIdx=68; trainIdx=157; distance=256.396
+queryIdx=69; trainIdx=46; distance=97.5141
+queryIdx=76; trainIdx=47; distance=141.542
+queryIdx=80; trainIdx=52; distance=176.119
+queryIdx=81; trainIdx=53; distance=150.722
+queryIdx=84; trainIdx=71; distance=242.479
+queryIdx=91; trainIdx=64; distance=75.4188
+queryIdx=96; trainIdx=68; distance=212.087
+queryIdx=98; trainIdx=66; distance=230.51
+queryIdx=100; trainIdx=75; distance=205.672
+queryIdx=108; trainIdx=83; distance=104.106
+queryIdx=110; trainIdx=85; distance=76.1118
+queryIdx=114; trainIdx=86; distance=198.139
+queryIdx=121; trainIdx=93; distance=65.1383
+queryIdx=125; trainIdx=93; distance=43.1045
+queryIdx=126; trainIdx=94; distance=95.4463
+queryIdx=135; trainIdx=97; distance=54.2586
+queryIdx=136; trainIdx=96; distance=119.912
+queryIdx=140; trainIdx=100; distance=98.4987
+queryIdx=143; trainIdx=109; distance=95.5824
+queryIdx=147; trainIdx=109; distance=72.904
+queryIdx=149; trainIdx=110; distance=107.68
+queryIdx=150; trainIdx=122; distance=234.423
+queryIdx=156; trainIdx=119; distance=236.438
+queryIdx=159; trainIdx=117; distance=123.887
+queryIdx=164; trainIdx=120; distance=104.805
+queryIdx=169; trainIdx=124; distance=142.07
+queryIdx=174; trainIdx=129; distance=145.63
+queryIdx=175; trainIdx=129; distance=67.9632
+queryIdx=176; trainIdx=134; distance=120.474
+queryIdx=177; trainIdx=128; distance=100.459
+queryIdx=178; trainIdx=129; distance=88
+queryIdx=179; trainIdx=127; distance=110.404
+queryIdx=183; trainIdx=122; distance=231.443
+queryIdx=187; trainIdx=144; distance=131.149
+queryIdx=193; trainIdx=157; distance=267.466
+queryIdx=196; trainIdx=145; distance=147.594
+queryIdx=206; trainIdx=155; distance=117.983
+queryIdx=210; trainIdx=155; distance=90.7524
+queryIdx=213; trainIdx=159; distance=111.306
+queryIdx=215; trainIdx=163; distance=80.1686
+queryIdx=217; trainIdx=163; distance=150.682
+queryIdx=220; trainIdx=162; distance=96.3016
+queryIdx=221; trainIdx=171; distance=159.8
+queryIdx=223; trainIdx=166; distance=76.7659
+queryIdx=224; trainIdx=171; distance=127.15
+queryIdx=228; trainIdx=172; distance=95.1998
+queryIdx=229; trainIdx=155; distance=123.369
+queryIdx=230; trainIdx=175; distance=138.145
+queryIdx=231; trainIdx=166; distance=126.238
+queryIdx=232; trainIdx=177; distance=78.6575
+queryIdx=236; trainIdx=181; distance=105.38
+queryIdx=238; trainIdx=182; distance=91.3345
+queryIdx=241; trainIdx=183; distance=122.229
+queryIdx=258; trainIdx=192; distance=164.484
+queryIdx=259; trainIdx=194; distance=170.868
+queryIdx=261; trainIdx=214; distance=229.6
+queryIdx=266; trainIdx=213; distance=196.685
+queryIdx=267; trainIdx=198; distance=139.85
+queryIdx=270; trainIdx=201; distance=65.8179
+queryIdx=274; trainIdx=213; distance=251.342
+queryIdx=278; trainIdx=210; distance=113.539
+queryIdx=281; trainIdx=213; distance=121.811
+queryIdx=282; trainIdx=198; distance=113.044
+queryIdx=288; trainIdx=217; distance=82.813
+queryIdx=291; trainIdx=208; distance=109.494
+queryIdx=294; trainIdx=192; distance=207.42
+queryIdx=296; trainIdx=221; distance=154.706
+queryIdx=298; trainIdx=226; distance=94.9316
+queryIdx=299; trainIdx=227; distance=149.097
+queryIdx=301; trainIdx=226; distance=67.1789
+queryIdx=303; trainIdx=233; distance=140.581
+queryIdx=308; trainIdx=231; distance=70.9507
+queryIdx=310; trainIdx=235; distance=144.527
+queryIdx=311; trainIdx=236; distance=105.726
+queryIdx=312; trainIdx=231; distance=159.088
+queryIdx=320; trainIdx=243; distance=110.833
+queryIdx=321; trainIdx=244; distance=86.954
+queryIdx=324; trainIdx=257; distance=192.536
+queryIdx=325; trainIdx=250; distance=61.5955
+queryIdx=327; trainIdx=251; distance=45.9021
+queryIdx=329; trainIdx=255; distance=73.0411
+queryIdx=331; trainIdx=258; distance=150.133
+queryIdx=332; trainIdx=248; distance=201.099
+queryIdx=341; trainIdx=263; distance=153.75
+queryIdx=343; trainIdx=265; distance=161.422
+queryIdx=348; trainIdx=267; distance=94.8103
+queryIdx=357; trainIdx=272; distance=117.898
+queryIdx=362; trainIdx=277; distance=166.694
+queryIdx=365; trainIdx=278; distance=81.9817
+queryIdx=366; trainIdx=273; distance=185.365
+queryIdx=372; trainIdx=275; distance=196.774
+queryIdx=376; trainIdx=284; distance=220.395
+queryIdx=378; trainIdx=286; distance=57.9828
+queryIdx=385; trainIdx=292; distance=55.2449
+queryIdx=389; trainIdx=291; distance=202.237
+queryIdx=390; trainIdx=293; distance=50.8724
+queryIdx=393; trainIdx=295; distance=79.4733
+queryIdx=396; trainIdx=297; distance=84.8351
+queryIdx=414; trainIdx=310; distance=136.993
+queryIdx=417; trainIdx=315; distance=261.63
+queryIdx=424; trainIdx=329; distance=218.963
+queryIdx=429; trainIdx=337; distance=198.386
+[2018-05-03 14:03:59.334] [logger] [info] Found 117 good matches; drew match pairs to /ps4-2-b-1.png
+[2018-05-03 14:03:59.360] [logger] [info] Found keypoints and drew to /ps4-2-a-2.png
+[2018-05-03 14:03:59.386] [file_logger] [info] 
+Matches:
+queryIdx=3; trainIdx=4; distance=70.1855
+queryIdx=5; trainIdx=6; distance=151.852
+queryIdx=11; trainIdx=10; distance=109.695
+queryIdx=16; trainIdx=11; distance=123.016
+queryIdx=17; trainIdx=30; distance=42.4382
+queryIdx=20; trainIdx=16; distance=93.2845
+queryIdx=22; trainIdx=19; distance=185.445
+queryIdx=23; trainIdx=41; distance=134.648
+queryIdx=24; trainIdx=19; distance=167.281
+queryIdx=25; trainIdx=45; distance=102.742
+queryIdx=27; trainIdx=23; distance=50.4083
+queryIdx=31; trainIdx=32; distance=78.6448
+queryIdx=32; trainIdx=93; distance=82.7406
+queryIdx=35; trainIdx=100; distance=128.926
+queryIdx=36; trainIdx=50; distance=172.763
+queryIdx=37; trainIdx=107; distance=45.299
+queryIdx=38; trainIdx=48; distance=201.152
+queryIdx=41; trainIdx=149; distance=138.903
+queryIdx=42; trainIdx=10; distance=184.445
+queryIdx=43; trainIdx=46; distance=30.3974
+queryIdx=44; trainIdx=167; distance=142.559
+queryIdx=52; trainIdx=113; distance=160.449
+queryIdx=56; trainIdx=124; distance=49.3559
+queryIdx=63; trainIdx=64; distance=82.134
+queryIdx=66; trainIdx=28; distance=78.2496
+queryIdx=67; trainIdx=49; distance=198.925
+queryIdx=72; trainIdx=33; distance=160.596
+queryIdx=78; trainIdx=81; distance=169.225
+queryIdx=79; trainIdx=84; distance=163.322
+queryIdx=94; trainIdx=92; distance=247.548
+queryIdx=97; trainIdx=91; distance=141.202
+queryIdx=104; trainIdx=91; distance=165.825
+queryIdx=105; trainIdx=108; distance=139.624
+queryIdx=109; trainIdx=145; distance=210.362
+queryIdx=110; trainIdx=141; distance=47.9583
+queryIdx=112; trainIdx=80; distance=150.443
+queryIdx=113; trainIdx=74; distance=54.7723
+queryIdx=117; trainIdx=90; distance=201.549
+queryIdx=128; trainIdx=145; distance=185.194
+queryIdx=129; trainIdx=199; distance=103.995
+queryIdx=133; trainIdx=51; distance=193.43
+queryIdx=134; trainIdx=105; distance=162.468
+queryIdx=137; trainIdx=66; distance=242.809
+queryIdx=142; trainIdx=68; distance=61.9919
+queryIdx=146; trainIdx=214; distance=221.903
+queryIdx=150; trainIdx=104; distance=105.033
+queryIdx=151; trainIdx=127; distance=227.68
+queryIdx=154; trainIdx=140; distance=75.379
+queryIdx=158; trainIdx=140; distance=47.392
+queryIdx=162; trainIdx=159; distance=26.3818
+queryIdx=164; trainIdx=159; distance=51
+queryIdx=165; trainIdx=127; distance=104.135
+queryIdx=171; trainIdx=188; distance=86.0174
+queryIdx=176; trainIdx=173; distance=156.048
+queryIdx=177; trainIdx=193; distance=158.931
+queryIdx=178; trainIdx=89; distance=108.032
+queryIdx=180; trainIdx=193; distance=111.521
+queryIdx=182; trainIdx=173; distance=78.886
+queryIdx=183; trainIdx=192; distance=94.1807
+queryIdx=185; trainIdx=148; distance=168.015
+queryIdx=189; trainIdx=176; distance=138.683
+queryIdx=190; trainIdx=196; distance=113.93
+queryIdx=193; trainIdx=151; distance=109.832
+queryIdx=195; trainIdx=186; distance=138.532
+queryIdx=196; trainIdx=110; distance=292.447
+queryIdx=201; trainIdx=161; distance=131.065
+queryIdx=203; trainIdx=175; distance=165.955
+queryIdx=205; trainIdx=172; distance=28.4605
+queryIdx=217; trainIdx=179; distance=62.7136
+queryIdx=223; trainIdx=211; distance=145.633
+queryIdx=226; trainIdx=200; distance=82.4075
+queryIdx=227; trainIdx=206; distance=122.115
+queryIdx=233; trainIdx=158; distance=165.409
+queryIdx=248; trainIdx=237; distance=211.821
+queryIdx=254; trainIdx=226; distance=41.9762
+queryIdx=258; trainIdx=215; distance=105.109
+queryIdx=259; trainIdx=236; distance=74.263
+queryIdx=263; trainIdx=242; distance=46.8828
+[2018-05-03 14:03:59.409] [logger] [info] Found 78 good matches; drew match pairs to /ps4-2-b-2.png
+[2018-05-03 14:03:59.409] [logger] [info] Problem 2 runtime = 181.207 ms
+[2018-05-03 14:03:59.409] [logger] [info] Problem 3 begins
+[2018-05-03 14:03:59.409] [logger] [info] RANSAC for a translation:
+[2018-05-03 14:03:59.420] [file_logger] [info] RANSAC took 56 iterations
+[2018-05-03 14:03:59.420] [logger] [info] 
+Best transform =
+[1, 0, -134;
+ 0, 1, -78]
+with consensus ratio 0.213675
+[2018-05-03 14:03:59.451] [logger] [info] RANSAC for a similarity transformation:
+[2018-05-03 14:03:59.456] [file_logger] [info] RANSAC took 30 iterations
+[2018-05-03 14:03:59.456] [logger] [info] 
+Best transform =
+[0.97133934, -0.28252175, 38.384468;
+ 0.28252175, 0.97133934, -58.787109]
+with consensus ratio 0.628205
+[2018-05-03 14:03:59.489] [logger] [info] RANSAC for an affine transformation:
+[2018-05-03 14:03:59.493] [file_logger] [info] RANSAC took 30 iterations
+[2018-05-03 14:03:59.493] [logger] [info] 
+Best transform =
+[0.95664239, -0.26735318, 39.611755;
+ 0.28754473, 0.99733996, -65.212708]
+with consensus ratio 0.602564
+[2018-05-03 14:03:59.522] [logger] [info] Problem 3 runtime = 113.328 ms
