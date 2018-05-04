@@ -1,0 +1,15 @@
+---
+# Problem Set 5 image sets
+image_sets:
+  yosemite: ../Resources/ProblemSet5/DataSeq1
+  pupper: ../Resources/ProblemSet5/DataSeq2
+  juggle: ../Resources/ProblemSet5/Juggle
+  shift: ../Resources/ProblemSet5/TestSeq
+
+output_dir: ./ps5_output
+
+# Seed for Mersenne Twister Engine
+mersenne_seed: 16 38 c7 e4 6a a2 d8 cc 96 f6 fe f1 4b 7d a7 25
+
+use_gpu: true
+...
