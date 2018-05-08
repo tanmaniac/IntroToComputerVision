@@ -33,18 +33,21 @@ public:
     public:
         ImageSet() = default;
         ImageSet(const YAML::Node& node, const std::string& dirKey);
+        using iterator = std::vector<cv::Mat>::iterator;
+        using const_iterator = std::vector<cv::Mat>::const_iterator;
 
         // Loads a set of images in alphabetical order into a vector of cv::Mats
         bool loadImFromDir(const std::string& dir);
 
         // Indexing operator so that we don't have to access _pics directly
-        cv::Mat& operator[](int idx) {
-            return _pics[idx];
-        }
+        cv::Mat& operator[](int idx) { return _pics[idx]; }
 
-        const cv::Mat& operator[](int idx) const {
-            return _pics[idx];
-        }
+        const cv::Mat& operator[](int idx) const { return _pics[idx]; }
+
+        inline iterator begin() noexcept { return _pics.begin(); }
+        inline const_iterator begin() const noexcept { return _pics.cbegin(); }
+        inline iterator end() noexcept { return _pics.end(); }
+        inline const_iterator end() const noexcept { return _pics.end(); }
     };
 
     ImageSet _yosemite, _pupper, _juggle, _shift;

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <string>
 
 // Useful utilities that can be used for both CUDA and CPU code
 

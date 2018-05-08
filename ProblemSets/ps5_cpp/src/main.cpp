@@ -1,5 +1,6 @@
 #include <common/CudaWarmup.h>
 #include "../include/Config.h"
+#include "Solution.h"
 
 #include <spdlog/spdlog.h>
 
@@ -25,4 +26,6 @@ int main() {
     _fileLogger->info("GPU warmup done");
 
     Config config(CONFIG_FILE_PATH);
+
+    sol::runProblem1(config);
 }
