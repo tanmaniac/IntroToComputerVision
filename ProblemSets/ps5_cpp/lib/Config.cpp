@@ -97,32 +97,30 @@ bool Config::loadConfig(const YAML::Node& config) {
             "No output path specified or could not make new directory; using current directory");
     }
 
-    if (config["mersenne_seed"]) {
-        // Load seed as a string of hex values
-        std::istringstream seedString(config["mersenne_seed"].as<std::string>());
-
-        uint32_t i;
-        std::vector<uint32_t> seedVals;
-        while (seedString >> std::hex >> i) {
-            seedVals.push_back(i);
-        }
-
-        _mersenneSeed = std::make_shared<std::seed_seq>(seedVals.begin(), seedVals.end());
-        std::stringstream ss;
-        ss << std::hex;
-        _mersenneSeed->param(std::ostream_iterator<uint32_t>(ss, " "));
-        _fileLogger->info("Using random seed {}", ss.str());
-    } else {
-        _mersenneSeed = std::unique_ptr<std::seed_seq>(new std::seed_seq({1}));
-        std::stringstream ss;
-        _mersenneSeed->param(std::ostream_iterator<uint32_t>(ss, " "));
-        _logger->warn("No random seed specified; using {}", ss.str());
-    }
-
     // Should we use GPU or CPU?
     if (config["use_gpu"]) {
         _useGpu = config["use_gpu"].as<bool>();
         _logger->info("Using {} for compute", _useGpu ? "GPU" : "CPU");
+    }
+
+    if (config["lk_window_size_1"]) {
+        _lkWinSize1 = config["lk_window_size_1"].as<size_t>();
+    }
+
+    if (config["lk_window_size_3"]) {
+        _lkWinSize3 = config["lk_window_size_3"].as<size_t>();
+    }
+
+    if (config["pyr_level_3-a"]) {
+        _pyrLevel3a = config["pyr_level_3-a"].as<size_t>();
+    }
+
+    if (config["pyr_level_3-b"]) {
+        _pyrLevel3b = config["pyr_level_3-b"].as<size_t>();
+    }
+
+    if (config["lk_window_size_4"]) {
+        _lkWinSize4 = config["lk_window_size_4"].as<size_t>();
     }
 
     bool configSuccess = true;

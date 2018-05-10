@@ -8,8 +8,11 @@ image_sets:
 
 output_dir: ./ps5_output
 
-# Seed for Mersenne Twister Engine
-mersenne_seed: 16 38 c7 e4 6a a2 d8 cc 96 f6 fe f1 4b 7d a7 25
+lk_window_size_1: 43
 
-use_gpu: true
+lk_window_size_3: 7
+pyr_level_3-a: 1
+pyr_level_3-b: 2
+
+lk_window_size_4: 15 
 ...

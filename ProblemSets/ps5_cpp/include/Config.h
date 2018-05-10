@@ -52,11 +52,10 @@ public:
 
     ImageSet _yosemite, _pupper, _juggle, _shift;
     bool _useGpu = false;
+    size_t _lkWinSize1, _lkWinSize3, _lkWinSize4, _pyrLevel3a, _pyrLevel3b;
 
     // Path to which output images will be written
     std::string _outputPathPrefix;
-    // Seed for mersenne twister engine
-    std::shared_ptr<std::seed_seq> _mersenneSeed;
 
     bool _configDone = false;
 
