@@ -1,0 +1,18 @@
+---
+# Problem Set 5 image sets
+image_sets:
+  yosemite: ../Resources/ProblemSet5/DataSeq1
+  pupper: ../Resources/ProblemSet5/DataSeq2
+  juggle: ../Resources/ProblemSet5/Juggle
+  shift: ../Resources/ProblemSet5/TestSeq
+
+output_dir: ./ps5_output
+
+lk_window_size_1: 43
+
+lk_window_size_3: 7
+pyr_level_3-a: 1
+pyr_level_3-b: 2
+
+lk_window_size_4: 15 
+...
