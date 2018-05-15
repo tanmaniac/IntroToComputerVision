@@ -1,0 +1,16 @@
+---
+# Input videos and initial bounding boxes
+pres_debate:
+  video: ../Resources/ProblemSet6/pres_debate.avi
+  bounding_box: ../Resources/ProblemSet6/pres_debate.txt
+
+noisy_debate:
+  video: ../Resources/ProblemSet6/noisy_debate.avi
+  bounding_box: ../Resources/ProblemSet6/noisy_debate.txt
+
+pedestrians:
+  video: ../Resources/ProblemSet6/pedestrians.avi
+  bounding_box: ../Resources/ProblemSet6/pedestrians.txt
+
+output_dir: ./ps6_output
+...
