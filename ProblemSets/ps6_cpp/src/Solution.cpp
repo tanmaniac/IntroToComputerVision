@@ -7,6 +7,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/videoio/videoio.hpp>
 
 #include <memory>
 #include <tuple>
@@ -22,6 +23,10 @@ void sol::runProblem1(Config& config) {
     cv::Point2f bboxCenter; // Center of bounding box around tracked point
     float xVar, yVar;       // x and y variances
 
+    // Set up a video writer
+    cv::VideoWriter videoOut;
+    static constexpr int frameRate = 30; // 30 fps
+
     // Play back the first data set
     bool firstFrame = true;
     std::chrono::duration<double, std::milli> frameTimes;
@@ -34,7 +39,13 @@ void sol::runProblem1(Config& config) {
         if (firstFrame) {
             cv::Mat model = frame(cv::Rect(config._debate._bbox, config._debate._bboxSize));
             // Initialize the particle filter
-            pf = std::make_unique<ParticleFilter>(model, frame.size(), numParticles, 20.f, 10.f);
+            pf = cpp_upstream::make_unique<ParticleFilter>(
+                model, frame.size(), numParticles, 20.f, 10.f);
+            // Initialize video writer
+            videoOut = cv::VideoWriter(config._outputPathPrefix + "/romney_tracked.avi",
+                                       cv::VideoWriter::fourcc('M', 'P', 'E', 'G'),
+                                       frameRate,
+                                       frame.size());
             firstFrame = false;
             logger->info("Initialized particle filter");
         }
@@ -58,9 +69,11 @@ void sol::runProblem1(Config& config) {
         std::cout << "\rFrame time = " << frameTime.count() << " ms (" << 1000.0 / frameTime.count()
                   << " fps)";
 
+        // Save video and display
+        videoOut.write(frame);
         cv::imshow("Frame", frame);
         numFrames++;
-        char c = char(cv::waitKey(25));
+        char c = char(cv::waitKey(1));
         if (c == 27) {
             break;
         }

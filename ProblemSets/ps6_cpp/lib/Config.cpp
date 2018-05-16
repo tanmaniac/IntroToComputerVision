@@ -91,7 +91,7 @@ bool Config::Tracking::loadBBox(const std::string& filename) {
             }
             _bboxSize = cv::Size2f(size[0], size[1]);
         } else {
-            tmpLogger->error("Could not read first line of input file {}", filename);
+            tmpLogger->error("Could not read second line of input file {}", filename);
             return false;
         }
     } else {
