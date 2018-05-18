@@ -13,4 +13,40 @@ pedestrians:
   bounding_box: ../Resources/ProblemSet6/pedestrians.txt
 
 output_dir: ./ps6_output
+
+pfconf1:
+  num_particles: 300
+  mse_sigma: 3
+  dynamics_sigma: 6.5
+  alpha: 0.1
+
+pfconf1_noisy:
+  num_particles: 300
+  mse_sigma: 3
+  dynamics_sigma: 6.5
+  alpha: 0.1
+
+pfconf2:
+  num_particles: 700
+  mse_sigma: 1.5
+  dynamics_sigma: 28
+  alpha: 0.15
+
+pfconf2_noisy:
+  num_particles: 700
+  mse_sigma: 1.5
+  dynamics_sigma: 26
+  alpha: 0.15
+
+pfconf3_head:
+  num_particles: 300
+  mse_sigma: 0
+  dynamics_sigma: 4.7
+  alpha: 0.15
+
+pfconf3_hand:
+  num_particles: 300
+  mse_sigma: 0
+  dynamics_sigma: 28
+  alpha: 0.15
 ...

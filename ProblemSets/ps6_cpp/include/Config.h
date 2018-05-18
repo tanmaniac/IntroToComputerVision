@@ -39,7 +39,16 @@ public:
         bool loadBBox(const std::string& filename);
     };
 
+    struct PFConf : BasicConfig {
+        double _mseSigma, _dynamicsSigma, _alpha;
+        size_t _numParticles;
+
+        PFConf() = default;
+        PFConf(const YAML::Node& node);
+    };
+
     Tracking _debate, _noisyDebate, _pedestrians;
+    PFConf _pfConf1, _pfConf1Noisy, _pfConf2, _pfConf2Noisy, _pfConf3Head, _pfConf3Hand;
     bool _useGpu = false;
 
     // Path to which output images will be written

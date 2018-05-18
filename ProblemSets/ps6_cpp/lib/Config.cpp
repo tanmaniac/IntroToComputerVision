@@ -102,6 +102,18 @@ bool Config::Tracking::loadBBox(const std::string& filename) {
     return true;
 }
 
+Config::PFConf::PFConf(const YAML::Node& node) {
+    bool loadSuccess = true;
+    auto tmpLogger = spdlog::get(config::FILE_LOGGER);
+
+    loadSuccess = loadParam(node, "num_particles", _numParticles, tmpLogger);
+    loadSuccess = loadParam(node, "mse_sigma", _mseSigma, tmpLogger);
+    loadSuccess = loadParam(node, "dynamics_sigma", _dynamicsSigma, tmpLogger);
+    loadSuccess = loadParam(node, "alpha", _alpha, tmpLogger);
+
+    _configDone = loadSuccess;
+}
+
 Config::Config(const std::string& configFilePath) {
     _logger = spdlog::get(config::STDOUT_LOGGER);
     _fileLogger = spdlog::get(config::FILE_LOGGER);
@@ -154,6 +166,26 @@ bool Config::loadConfig(const YAML::Node& config) {
         _logger->info("Using {} for compute", _useGpu ? "GPU" : "CPU");
     }
 
+    // Load parameters for particle filter
+    if (YAML::Node node = config["pfconf1"]) {
+        _pfConf1 = PFConf(node);
+    }
+    if (YAML::Node node = config["pfconf1_noisy"]) {
+        _pfConf1Noisy = PFConf(node);
+    }
+    if (YAML::Node node = config["pfconf2"]) {
+        _pfConf2 = PFConf(node);
+    }
+    if (YAML::Node node = config["pfconf2_noisy"]) {
+        _pfConf2Noisy = PFConf(node);
+    }
+    if (YAML::Node node = config["pfconf3_head"]) {
+        _pfConf3Head = PFConf(node);
+    }
+    if (YAML::Node node = config["pfconf3_hand"]) {
+        _pfConf3Hand = PFConf(node);
+    }
+
     bool configSuccess = true;
     // Verify that configurations were successful
     if (!_debate.configDone()) {
@@ -166,6 +198,30 @@ bool Config::loadConfig(const YAML::Node& config) {
     }
     if (!_pedestrians.configDone()) {
         _logger->error("Loading input for pedestrians data set failed!");
+        configSuccess = false;
+    }
+    if (!_pfConf1.configDone()) {
+        _logger->error("Could not load parameters for problem 1 particle filter!");
+        configSuccess = false;
+    }
+    if (!_pfConf1Noisy.configDone()) {
+        _logger->error("Could not load parameters for problem 1 (noisy) particle filter!");
+        configSuccess = false;
+    }
+    if (!_pfConf2.configDone()) {
+        _logger->error("Could not load parameters for problem 2 particle filter!");
+        configSuccess = false;
+    }
+    if (!_pfConf2Noisy.configDone()) {
+        _logger->error("Could not load parameters for problem 2 (noisy) particle filter!");
+        configSuccess = false;
+    }
+    if (!_pfConf3Head.configDone()) {
+        _logger->error("Could not load parameters for problem 3 (head) particle filter!");
+        configSuccess = false;
+    }
+    if (!_pfConf3Hand.configDone()) {
+        _logger->error("Could not load parameters for problem 3 (hand) particle filter!");
         configSuccess = false;
     }
 

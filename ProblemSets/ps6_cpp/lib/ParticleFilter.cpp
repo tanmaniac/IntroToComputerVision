@@ -7,18 +7,51 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <numeric>
 #include <unordered_set>
 
 ParticleFilter::ParticleFilter(const cv::Mat& model,
                                const cv::Size& imSize,
                                const size_t numParticles,
+                               const SimilarityMode simMode,
                                const double mseSigma,
-                               const double sampleSigma)
-    : _model(model), _imSize(imSize), _numParticles(numParticles), _mseSigma(mseSigma),
-      _sampleSigma(sampleSigma) {
-    // Initialize particles as uniformly distributed random points in the image
-    genUniformParticles(
-        0.f, float(imSize.width), 0.f, float(imSize.height), numParticles, _particles);
+                               const double sampleSigma,
+                               const cv::Point2f& initModelPos,
+                               const double alpha)
+    : _modelPatch(model), _lastModelPatch(model), _modelPatchSize(model.size()), _imSize(imSize),
+      _numParticles(numParticles), _simMode(simMode), _mseSigma(mseSigma),
+      _sampleSigma(sampleSigma), _initModelPos(initModelPos), _alpha(alpha) {
+    // If the similarity mode uses mean-squared error, then the model is just the input image patch
+    if (simMode == SimilarityMode::MEAN_SHIFT_LT) {
+        // Model is the histogram of the image patch
+        _modelHist = calcHist(model);
+    }
+    std::cout << "Initialized" << std::endl;
+
+    if (initModelPos.x == -1 && initModelPos.y == -1) {
+        // No initial position, so generate uniform particles
+        genParticles(0.f,
+                     float(imSize.width),
+                     0.f,
+                     float(imSize.height),
+                     numParticles,
+                     GenParticleMode::UNIFORM,
+                     _particles);
+    } else {
+        // Use initial position to generate particles
+        float modelCenterX = initModelPos.x + float(model.cols) / 2.f;
+        float modelCenterY = initModelPos.y + float(model.rows) / 2.f;
+        genParticles(0.f,
+                     float(imSize.width),
+                     0.f,
+                     float(imSize.height),
+                     numParticles,
+                     GenParticleMode::GAUSSIAN,
+                     _particles,
+                     _sampleSigma,
+                     modelCenterX,
+                     modelCenterY);
+    }
 
     // Initialize N weights to 1/N
     _weights.assign(_particles.size(), 1.f / float(_particles.size()));
@@ -27,14 +60,17 @@ ParticleFilter::ParticleFilter(const cv::Mat& model,
 std::tuple<cv::Point2f, float, float> ParticleFilter::tick(const cv::Mat& frame) {
     // Predict the movement of all the particles
     displaceParticles();
-    // std::cout << "Displaced particles" << std::endl;
     // Update weights with the movement of those particles
     updateParticles(frame);
-    // std::cout << "Updated weights" << std::endl;
     // Resample based on newly computed weights
     resampleMultinomial();
     // Predict the new state
+    cv::Point2f bestEstPos;
     auto estimate = estimateState();
+    // Update model
+    std::tie(bestEstPos, std::ignore, std::ignore) = estimate;
+    updateModel(frame, bestEstPos);
+
     return estimate;
 }
 
@@ -52,46 +88,31 @@ void ParticleFilter::displaceParticles() {
     for (auto& p : _particles) {
         p.x += rng.gaussian(_sampleSigma);
         p.y += rng.gaussian(_sampleSigma);
-
-        // If the particle has exceeded the bounds of the image, then it "dies" and is replaced by a
-        // new one
-        if (p.x < 0 || p.x >= _imSize.width || p.y < 0 || p.y >= _imSize.height) {
-            p.x = rng.uniform(0.f, float(_imSize.width));
-            p.y = rng.uniform(0.f, float(_imSize.height));
-        }
     }
 }
 
 void ParticleFilter::updateParticles(const cv::Mat& frame) {
-    const int rows = _model.rows;
-    const int cols = _model.cols;
+    const int rows = _modelPatchSize.height;
+    const int cols = _modelPatchSize.width;
 
     const int xOffset = std::ceil(float(cols) / 2.f);
     const int yOffset = std::ceil(float(rows) / 2.f);
 
-    cv::Mat framePadded;
     cv::copyMakeBorder(
-        frame, framePadded, yOffset, yOffset, xOffset, xOffset, cv::BORDER_REPLICATE);
-
-    // std::cout << "xOffset = " << xOffset << "; yOffset = " << yOffset << "; model rows=" << rows
-    //           << ", cols=" << cols << std::endl;
+        frame, _paddedFrame, yOffset, yOffset, xOffset, xOffset, cv::BORDER_REPLICATE);
 
     // Iterate over particles and compute similarity
     double simSum = 0;
     for (int i = 0; i < _numParticles; i++) {
         const auto& p = _particles[i];
-        // std::cout << "p.x=" << p.x << " p.y=" << p.y << "; xMin=" << xMin << " yMin=" << yMin
-        //           << "; framePadded.cols=" << framePadded.cols << " .rows=" << framePadded.rows
-        //           << std::endl;
 
         // If the particle is outside the bounds of the image, then similarity can no longer be
         // computed. In that case just set the weight to 0.
         if (p.x < 0 || p.x >= _imSize.width || p.y < 0 || p.y >= _imSize.height) {
             _weights[i] = 0;
         } else {
-            // cv::Mat candidate = framePadded(cv::Rect(xMin + xOffset, yMin + yOffset, cols,
-            // rows));
-            cv::Mat candidate = framePadded(cv::Rect(p.x, p.y, cols, rows));
+            // Get a sample patch from the image
+            cv::Mat candidate = _paddedFrame(cv::Rect(p, _modelPatchSize));
 
             double similarity = computeSimilarityToModel(candidate);
             simSum += similarity;
@@ -133,11 +154,27 @@ void ParticleFilter::resampleMultinomial() {
 }
 
 double ParticleFilter::computeSimilarityToModel(const cv::Mat& candidate) {
-    assert(candidate.rows == _model.rows && candidate.cols == _model.cols &&
-           candidate.type() == _model.type());
+    if (_simMode == SimilarityMode::MEAN_SQ_ERR) {
+        double mse = calcMeanSqErr(candidate);
+        // Compute the similarity with squared exponential
+        return std::exp(-mse / (2 * _mseSigma * _mseSigma));
+    } else /* if (_simMode == SimilarityMode::MEAN_SHIFT_LT) */ {
+        std::vector<cv::Mat> candidateHist = calcHist(candidate);
+        double comp = 0;
+        for (int ch = 0; ch < candidateHist.size(); ch++) {
+            comp += cv::compareHist(_modelHist[ch], candidateHist[ch], _histComp);
+        }
+        comp /= candidateHist.size();
+        return std::exp(-comp);
+    }
+}
+
+double ParticleFilter::calcMeanSqErr(const cv::Mat& candidate) {
+    assert(candidate.rows == _modelPatch.rows && candidate.cols == _modelPatch.cols &&
+           candidate.type() == _modelPatch.type());
 
     // Compute mean-squared error
-    cv::Mat diff = _model - candidate;
+    cv::Mat diff = _modelPatch - candidate;
     diff = diff.mul(diff);
     cv::Scalar sums = cv::sum(diff);
     double mse = 0;
@@ -145,8 +182,25 @@ double ParticleFilter::computeSimilarityToModel(const cv::Mat& candidate) {
         mse += sums[ch];
     }
     mse /= double(candidate.rows * candidate.cols);
-    // Compute the similarity with squared exponential
-    return std::exp(-mse / (2 * _mseSigma * _mseSigma));
+}
+
+std::vector<cv::Mat> ParticleFilter::calcHist(const cv::Mat& patch) {
+    // Calculate histogram for each channel, then push that channel's hist back onto a vector
+    std::vector<cv::Mat> hists;
+    for (int i = 0; i < patch.channels(); i++) {
+        cv::Mat hist;
+        cv::calcHist(std::vector<cv::Mat>{patch},
+                     std::vector<int>{i},
+                     cv::Mat(),
+                     hist,
+                     std::vector<int>{_histBins},
+                     std::vector<float>{0, 256});
+
+        cv::normalize(hist, hist, 1, 0, cv::NORM_L2, -1);
+        hists.push_back(hist);
+    }
+
+    return hists;
 }
 
 std::tuple<cv::Point2f, float, float> ParticleFilter::estimateState() {
@@ -177,6 +231,22 @@ std::tuple<cv::Point2f, float, float> ParticleFilter::estimateState() {
     return std::make_tuple(cv::Point2f(xMean, yMean), xVar, yVar);
 }
 
+void ParticleFilter::updateModel(const cv::Mat& frame, const cv::Point2f& newModelPos) {
+    // Padded frame was already computed by updateParticles()
+    cv::Mat newPatch = _paddedFrame(cv::Rect(newModelPos, _modelPatchSize));
+    if (_simMode == SimilarityMode::MEAN_SQ_ERR) {
+        // Save the old model
+        _lastModelPatch = _modelPatch;
+        // Update the model
+        _modelPatch = _alpha * newPatch + (1.0 - _alpha) * _lastModelPatch;
+    } else {
+        _lastModelPatch = _modelPatch;
+        _lastModelHist = _modelHist;
+        cv::Mat blended = _alpha * newPatch + (1.0 - _alpha) * _lastModelPatch;
+        _modelHist = calcHist(blended);
+    }
+}
+
 struct PairEqual {
     template <typename T1, typename T2>
     bool operator()(const std::pair<T1, T2>& lhs, const std::pair<T1, T2>& rhs) const {
@@ -185,12 +255,16 @@ struct PairEqual {
 };
 
 template <typename T>
-void ParticleFilter::genUniformParticles(const T xMin,
-                                         const T xMax,
-                                         const T yMin,
-                                         const T yMax,
-                                         const size_t numParticles,
-                                         std::vector<cv::Point_<T>>& particles) {
+void ParticleFilter::genParticles(const T xMin,
+                                  const T xMax,
+                                  const T yMin,
+                                  const T yMax,
+                                  const size_t numParticles,
+                                  const GenParticleMode mode,
+                                  std::vector<cv::Point_<T>>& particles,
+                                  const double sigma,
+                                  const T xInit,
+                                  const T yInit) {
     cv::RNG rng;
 
     // Hold points in a set with constant lookup so we can make sure the generated particles are
@@ -198,9 +272,15 @@ void ParticleFilter::genUniformParticles(const T xMin,
     std::unordered_set<std::pair<T, T>, boost::hash<std::pair<T, T>>, PairEqual> particleMap;
 
     size_t count = 0;
+    T xVal, yVal;
     while (count < numParticles) {
-        T xVal = rng.uniform(xMin, xMax);
-        T yVal = rng.uniform(yMin, yMax);
+        if (mode == GenParticleMode::UNIFORM) {
+            xVal = rng.uniform(xMin, xMax);
+            yVal = rng.uniform(yMin, yMax);
+        } else /* if (mode == GenParticleMode::GAUSSIAN) */ {
+            xVal = rng.gaussian(sigma) + xInit;
+            yVal = rng.gaussian(sigma) + yInit;
+        }
 
         auto result = particleMap.emplace(xVal, yVal);
         // Make sure that emplacing was successful
