@@ -1,0 +1,24 @@
+[2018-05-18 16:14:16.833] [file_logger] [info] GPU warmup done
+[2018-05-18 16:14:16.881] [file_logger] [info] Loaded bounding box with coordinates (320.875, 175.178); width=103.54; height=129.05
+[2018-05-18 16:14:16.922] [file_logger] [info] Loaded bounding box with coordinates (320.875, 175.178); width=103.54; height=129.05
+[2018-05-18 16:14:16.961] [file_logger] [info] Loaded bounding box with coordinates (211, 36); width=100; height=293
+[2018-05-18 16:14:16.962] [logger] [info] Created output directory at "./ps6_output"
+[2018-05-18 16:14:16.962] [logger] [info] Loaded runtime configuration from "../config/ps6.yaml"
+[2018-05-18 16:14:16.962] [logger] [info] Problem 1 begins
+[2018-05-18 16:14:16.985] [logger] [info] Initialized particle filter
+[2018-05-18 16:14:21.586] [logger] [info] Average tick time was 3.209 ms (311.623 fps)
+[2018-05-18 16:14:21.611] [logger] [info] Initialized particle filter
+[2018-05-18 16:14:31.283] [logger] [info] Average tick time was 3.04322 ms (328.6 fps)
+[2018-05-18 16:14:31.283] [logger] [info] Problem 1 runtime = 14321.2 ms
+[2018-05-18 16:14:31.283] [logger] [info] Problem 2 begins
+[2018-05-18 16:14:31.293] [logger] [info] Initialized particle filter
+[2018-05-18 16:14:37.591] [logger] [info] Average tick time was 4.17584 ms (239.473 fps)
+[2018-05-18 16:14:37.609] [logger] [info] Initialized particle filter
+[2018-05-18 16:14:48.140] [logger] [info] Average tick time was 4.21075 ms (237.488 fps)
+[2018-05-18 16:14:48.140] [logger] [info] Problem 2 runtime = 16856.9 ms
+[2018-05-18 16:14:48.140] [logger] [info] Problem 3 begins
+[2018-05-18 16:14:48.150] [logger] [info] Initialized particle filter
+[2018-05-18 16:14:58.031] [logger] [info] Average tick time was 16.8773 ms (59.2513 fps)
+[2018-05-18 16:14:58.042] [logger] [info] Initialized particle filter
+[2018-05-18 16:15:07.124] [logger] [info] Average tick time was 13.8011 ms (72.4582 fps)
+[2018-05-18 16:15:07.124] [logger] [info] Problem 3 runtime = 18984 ms

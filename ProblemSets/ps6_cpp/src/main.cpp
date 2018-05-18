@@ -27,7 +27,7 @@ int main() {
 
     Config config(CONFIG_FILE_PATH);
 
-    // sol::runProblem1(config);
-    // sol::runProblem2(config);
+    sol::runProblem1(config);
+    sol::runProblem2(config);
     sol::runProblem3(config);
 }

@@ -95,9 +95,6 @@ void pfDriver(Config::Tracking& tracking,
         if (c == 27) {
             break;
         }
-
-        // FOR TESTING
-        // if (numFrames > 0) break;
     }
     // Reset the video stream
     tracking._cap.set(cv::CAP_PROP_POS_FRAMES, 0);
@@ -173,11 +170,11 @@ void sol::runProblem3(Config& config) {
     logger->info("Problem 3 begins");
     auto start = clock::now();
 
-    // pfDriver(config._debate,
-    //          config._pfConf3Head,
-    //          ParticleFilter::SimilarityMode::MEAN_SHIFT_LT,
-    //          config._outputPathPrefix + "/ps6-3-a",
-    //          {{28, 84, 144}});
+    pfDriver(config._debate,
+             config._pfConf3Head,
+             ParticleFilter::SimilarityMode::MEAN_SHIFT_LT,
+             config._outputPathPrefix + "/ps6-3-a",
+             {{28, 84, 144}});
 
     // Create a new tracking config object with Romney's hand as the bounding box
     Config::Tracking handTracking;
