@@ -1,0 +1,6 @@
+---
+# Input videos and initial bounding boxes
+input_dir: ../Resources/ProblemSet7
+
+output_dir: ./ps6_output
+...
