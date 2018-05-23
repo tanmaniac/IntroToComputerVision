@@ -101,14 +101,28 @@ bool Config::loadConfig(const YAML::Node& config) {
     }
 
     // Load motion history settings
-    if (YAML::Node node = config["mhi1"]) {
-        _mhi1 = MHI(node);
+    if (YAML::Node node = config["mhi_action1"]) {
+        _mhiAction1 = MHI(node);
+    }
+    if (YAML::Node node = config["mhi_action2"]) {
+        _mhiAction2 = MHI(node);
+    }
+    if (YAML::Node node = config["mhi_action3"]) {
+        _mhiAction3 = MHI(node);
     }
 
     bool configSuccess = true;
     // Verify that configurations were successful
-    if (!_mhi1.configDone()) {
-        _logger->error("Could not load MHI configuration for problem 1!");
+    if (!_mhiAction1.configDone()) {
+        _logger->error("Could not load MHI configuration for action 1!");
+        configSuccess = false;
+    }
+    if (!_mhiAction2.configDone()) {
+        _logger->error("Could not load MHI configuration for action 2!");
+        configSuccess = false;
+    }
+    if (!_mhiAction3.configDone()) {
+        _logger->error("Could not load MHI configuration for action 3!");
         configSuccess = false;
     }
 

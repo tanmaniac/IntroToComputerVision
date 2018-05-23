@@ -4,9 +4,21 @@ input_dir: ../Resources/ProblemSet7
 
 output_dir: ./ps7_output
 
-mhi1:
+mhi_action1:
   diff_threshold: 1.7
   pre_blur_size: 31
   pre_blur_sigma: 10
-  tau: 15
+  tau: 50
+
+mhi_action2:
+  diff_threshold: 1.7
+  pre_blur_size: 31
+  pre_blur_sigma: 10
+  tau: 50
+
+mhi_action3:
+  diff_threshold: 1.7
+  pre_blur_size: 31
+  pre_blur_sigma: 10
+  tau: 70
 ...

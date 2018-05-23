@@ -42,7 +42,7 @@ public:
         MHI(const YAML::Node& node);
     };
 
-    MHI _mhi1;
+    MHI _mhiAction1, _mhiAction2, _mhiAction3;
 
 private:
     std::shared_ptr<spdlog::logger> _logger, _fileLogger;
