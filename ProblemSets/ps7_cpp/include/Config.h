@@ -33,6 +33,17 @@ public:
     // Path to which output images will be written
     std::string _outputPathPrefix;
 
+    struct MHI : BasicConfig {
+        double _threshold, _preBlurSigma;
+        cv::Size _preBlurSize;
+        int _tau;
+
+        MHI() = default;
+        MHI(const YAML::Node& node);
+    };
+
+    MHI _mhi1;
+
 private:
     std::shared_ptr<spdlog::logger> _logger, _fileLogger;
 
@@ -44,6 +55,4 @@ private:
     std::unordered_map<std::string, std::string> _vidMap;
     // Set as true when configuration is done
     bool _configDone = false;
-    // Should we use GPU for compute?
-    bool _useGpu = true;
 };

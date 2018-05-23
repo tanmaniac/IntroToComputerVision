@@ -32,6 +32,20 @@ Config::Config(const std::string& configFilePath) {
     }
 }
 
+Config::MHI::MHI(const YAML::Node& node) {
+    bool loadSuccess = true;
+    auto tmpLogger = spdlog::get(config::FILE_LOGGER);
+
+    loadSuccess = loadParam(node, "diff_threshold", _threshold, tmpLogger);
+    int blurSize;
+    loadSuccess = loadParam(node, "pre_blur_size", blurSize, tmpLogger);
+    _preBlurSize = cv::Size(blurSize, blurSize);
+    loadSuccess = loadParam(node, "pre_blur_sigma", _preBlurSigma, tmpLogger);
+    loadSuccess = loadParam(node, "tau", _tau, tmpLogger);
+
+    _configDone = loadSuccess;
+}
+
 bool Config::getVidFilesFromDir(const std::string& dir) {
     // Enter directory
     fs::path path(dir);
@@ -86,14 +100,17 @@ bool Config::loadConfig(const YAML::Node& config) {
             "No output path specified or could not make new directory; using current directory");
     }
 
-    // Should we use GPU or CPU?
-    if (config["use_gpu"]) {
-        _useGpu = config["use_gpu"].as<bool>();
-        _logger->info("Using {} for compute", _useGpu ? "GPU" : "CPU");
+    // Load motion history settings
+    if (YAML::Node node = config["mhi1"]) {
+        _mhi1 = MHI(node);
     }
 
     bool configSuccess = true;
     // Verify that configurations were successful
+    if (!_mhi1.configDone()) {
+        _logger->error("Could not load MHI configuration for problem 1!");
+        configSuccess = false;
+    }
 
     _configDone = configSuccess;
     return _configDone;

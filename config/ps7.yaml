@@ -1,6 +1,12 @@
 ---
-# Input videos and initial bounding boxes
+# Directory of input videos
 input_dir: ../Resources/ProblemSet7
 
-output_dir: ./ps6_output
+output_dir: ./ps7_output
+
+mhi1:
+  diff_threshold: 1.7
+  pre_blur_size: 31
+  pre_blur_sigma: 10
+  tau: 15
 ...
