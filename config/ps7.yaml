@@ -7,9 +7,9 @@ output_dir: ./ps7_output
 last_frame_of_action:
   action1:
     person1:
-      - 50
-      - 39
-      - 41
+      - 50  # Trial 1
+      - 39  # Trial 2
+      - 41  # Trial 3
     person2:
       - 30
       - 30
