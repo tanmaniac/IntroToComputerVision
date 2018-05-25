@@ -4,3 +4,6 @@
 [submodule "external/yaml-cpp"]
 	path = external/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp.git
+[submodule "external/gnuplot-iostream"]
+	path = external/gnuplot-iostream
+	url = https://github.com/dstahlke/gnuplot-iostream.git

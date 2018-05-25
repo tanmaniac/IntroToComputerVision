@@ -134,7 +134,7 @@ void getAllMHIs(Config& config,
                     mhiFrames.push_back(frame[0]);
                     actions.push_back(action);
                     people.push_back(person);
-                    normAndSave(frame[0], config._outputPathPrefix + "/" + vidFile + ".png");
+                    // normAndSave(frame[0], config._outputPathPrefix + "/" + vidFile + ".png");
                 } else {
                     logger->error("Could not get MHI for {} at given frame time ({})",
                                   vidFile,
@@ -265,6 +265,11 @@ void sol::runProblem2(Config& config) {
         cv::Mat confusion;
         matching::naiveConfusionMatrix(features, labels, confusion);
         logger->info("\nConfusion matrix with central moments=\n{}", confusion);
+
+        // Plot and save matrix
+        matching::plotConfusionMatrix(confusion,
+                                      "Confusion matrix with central (mu) moments",
+                                      config._outputPathPrefix + "/ps7-2-a-1.png");
     }
 
     {
@@ -274,6 +279,11 @@ void sol::runProblem2(Config& config) {
         cv::Mat confusion;
         matching::naiveConfusionMatrix(features, labels, confusion);
         logger->info("\nConfusion matrix with scale-invariant moments=\n{}", confusion);
+
+        // Plot and save matrix
+        matching::plotConfusionMatrix(confusion,
+                                      "Confusion matrix with scale-invariant (eta) moments",
+                                      config._outputPathPrefix + "/ps7-2-a-2.png");
     }
 
     // Part b : more intelligent confusion matrices
@@ -282,16 +292,24 @@ void sol::runProblem2(Config& config) {
     peopleMat.convertTo(peopleMat, CV_32S);
     {
         cv::Mat features, labels;
-        arrangeTrainingData(mhiMoments, actions, MomentType::BOTH, features, labels);
+        arrangeTrainingData(mhiMoments, actions, MomentType::MU, features, labels);
 
         std::vector<cv::Mat> confusions;
         matching::confusionMatrix(features, labels, peopleMat, 3, confusions);
 
         // Iterate over confusions matrices and print
-        for (int p = 0; p < confusions.size(); p++){
-            std::string whichPerson = (p == confusions.size() - 1) ? "average of all" : "person " + std::to_string(p + 1);
+        for (int p = 0; p < confusions.size(); p++) {
+            std::string whichPerson =
+                (p == confusions.size() - 1) ? "average of all" : "person " + std::to_string(p + 1);
             logger->info("\nConfusion matrix for {}=\n{}", whichPerson, confusions[p]);
+
+            matching::plotConfusionMatrix(confusions[p],
+                                          "Confusion matrix: " + whichPerson,
+                                          config._outputPathPrefix + "/ps7-2-b-" +
+                                              std::to_string(p + 1) + ".png");
         }
+
+        // matching::plotConfusionMatrix(confusions[0]);
     }
 
     auto finish = clock::now();

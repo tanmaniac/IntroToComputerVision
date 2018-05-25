@@ -1,6 +1,10 @@
 #include "../include/Matching.h"
 
+#include <gnuplot-iostream.h>
+
 #include <opencv2/ml/ml.hpp>
+
+#include <sstream>
 
 void makeNaiveCrossValidationSet(const cv::Mat& features,
                                  const cv::Mat& labels,
@@ -47,18 +51,17 @@ void matching::naiveConfusionMatrix(const cv::Mat& features,
                                     trainingLabels,
                                     inferenceFeatures,
                                     inferenceLabels);
-        // std::cout << "inferenceFeatures= " << inferenceFeatures
-        //           << "\ninferenceLabels= " << inferenceLabels << std::endl;
+
         knn->train(trainingFeatures, cv::ml::ROW_SAMPLE, trainingLabels);
-        // cv::Mat results;
+
         std::vector<float> results;
         knn->findNearest(inferenceFeatures, 3, results);
         // std::cout << "Result = " << results.at<float>(0, 0) << std::endl;
         float result = results[0];
         float expected = inferenceLabels.at<float>(0, 0);
-        // std::cout << "Result = " << results[0] << std::endl;
+
         // Update confusion matrix
-        assert (expected >= 1 && result >= 1);
+        assert(result > 0 && expected > 0);
         counts.at<float>(expected - 1, 0) += 1;
         confusion.at<float>(expected - 1, result - 1) += 1;
     }
@@ -112,34 +115,34 @@ void matching::confusionMatrix(const cv::Mat& features,
     // Iterate for each person
     for (int p = 1; p <= numPeople; p++) {
         makeCrossValidationSet(features,
-                           labels,
-                           people,
-                           p,
-                           trainingFeatures,
-                           trainingLabels,
-                           inferenceFeatures,
-                           inferenceLabels);
-        // std::cout << "inferenceFeatures= " << inferenceFeatures
-        //           << "\ninferenceLabels= " << inferenceLabels << std::endl;
+                               labels,
+                               people,
+                               p,
+                               trainingFeatures,
+                               trainingLabels,
+                               inferenceFeatures,
+                               inferenceLabels);
+
         knn->train(trainingFeatures, cv::ml::ROW_SAMPLE, trainingLabels);
-        // cv::Mat results;
+
         std::vector<float> results;
-        knn->findNearest(inferenceFeatures, 1, results);
+        knn->findNearest(inferenceFeatures, 3, results);
         assert(results.size() == inferenceLabels.rows);
-        
+
         // Create output matrix for this person
         cv::Mat confusion = cv::Mat::zeros(cfSize, CV_32F);
         cv::Mat counts = cv::Mat::zeros(3, 1, CV_32F);
-        
+
         // Extract results and add to confusion matrix
         for (int idx = 0; idx < results.size(); idx++) {
             float result = results[idx];
             float expected = inferenceLabels.at<float>(0, idx);
-            assert (expected > 0 && result > 0);
+
+            assert(result > 0 && expected > 0);
             counts.at<float>(expected - 1, 0) += 1;
             confusion.at<float>(expected - 1, result - 1) += 1;
         }
-        
+
         for (int c = 0; c < confusion.cols; c++) {
             cv::divide(confusion.col(c), counts, confusion.col(c));
         }
@@ -155,4 +158,55 @@ void matching::confusionMatrix(const cv::Mat& features,
     avg = avg / float(confusions.size());
 
     confusions.push_back(avg);
+}
+
+void matching::plotConfusionMatrix(const cv::Mat& confusion,
+                                   const std::string& title,
+                                   const std::string& fileName) {
+    // Build up "action" labels for predicted output
+    std::stringstream xtics;
+    for (int x = 0; x < confusion.cols; x++) {
+        xtics << "'action " << x + 1 << "' " << x;
+        if (x != confusion.cols - 1) {
+            xtics << ", ";
+        }
+    }
+    // And for expected output
+    std::stringstream ytics;
+    for (int y = 0; y < confusion.rows; y++) {
+        ytics << "'action " << y + 1 << "' " << y;
+        if (y != confusion.rows - 1) {
+            ytics << ", ";
+        }
+    }
+
+    Gnuplot gp;
+    gp << "set title '" << title << "'\n";
+    gp << "set autoscale fix\n";
+    gp << "set palette defined (0 'white', 1 'green')\n";
+    gp << "set tics scale 0\n";
+    gp << "set xtics (" << xtics.str() << ") rotate by 45 right\n";
+    gp << "set ytics (" << ytics.str() << ") rotate by 45 left offset -4,0\n";
+    gp << "set xlabel 'Predicted action'\nset ylabel 'Expected action'\n";
+    // gp << "set xtics center offset 0,-1\n";
+    gp << "unset cbtics\n";
+    gp << "set cblabel 'Matching percentage'\n";
+    gp << "unset key\n";
+
+    // Build up 2d vector with data
+    std::vector<std::vector<float>> data(confusion.rows);
+    for (int y = 0; y < confusion.rows; y++) {
+        data[y].resize(confusion.cols);
+        for (int x = 0; x < confusion.cols; x++) {
+            data[y][x] = confusion.at<float>(y, x);
+        }
+    }
+
+    gp << "plot" << gp.file1d(data)
+       << "matrix with image, '' matrix using 1:2:(sprintf('%.2f', $3)) with labels font ',16'\n";
+
+    // Save file
+    if (fileName.compare("") != 0) {
+        gp << "set terminal pngcairo\nset output '" << fileName << "'\nreplot" << std::endl;
+    }
 }

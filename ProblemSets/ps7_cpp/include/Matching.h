@@ -15,4 +15,10 @@ void confusionMatrix(const cv::Mat& features,
                      const cv::Mat& people,
                      const size_t numPeople,
                      std::vector<cv::Mat>& confusions);
+
+// Plots confusion matrix. fileName is an optional parameter; if it is set, then the plot will be
+// saved to that file.
+void plotConfusionMatrix(const cv::Mat& confusion,
+                         const std::string& title,
+                         const std::string& fileName = "");
 } // namespace matching
