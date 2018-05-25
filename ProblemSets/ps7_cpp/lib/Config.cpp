@@ -46,6 +46,25 @@ Config::MHI::MHI(const YAML::Node& node) {
     _configDone = loadSuccess;
 }
 
+bool Config::loadActionLengths(const YAML::Node& actions) {
+    // actions is structured as a map of maps of maps of sequences
+    for (int action = 1; action <= actions.size(); action++) {
+        auto curAction = actions["action" + std::to_string(action)];
+        for (int person = 1; person <= curAction.size(); person++) {
+            auto curPerson = curAction["person" + std::to_string(person)];
+            int trial = 1;
+            for (auto framesIter = curPerson.begin(); framesIter != curPerson.end(); framesIter++) {
+                int frameLength = framesIter->as<int>();
+                _lastFrames.insert({"PS7A" + std::to_string(action) + "P" + std::to_string(person) +
+                                        "T" + std::to_string(trial),
+                                    frameLength});
+                trial++;
+            }
+        }
+    }
+    return true;
+}
+
 bool Config::getVidFilesFromDir(const std::string& dir) {
     // Enter directory
     fs::path path(dir);
@@ -73,6 +92,8 @@ cv::VideoCapture Config::openVid(const std::string& name) {
     return cv::VideoCapture(_vidMap.at(name));
 }
 
+size_t Config::lastFrameOfAction(const std::string& name) { return _lastFrames.at(name); }
+
 bool Config::loadConfig(const YAML::Node& config) {
     // Load input videos
     if (config["input_dir"]) {
@@ -83,6 +104,16 @@ bool Config::loadConfig(const YAML::Node& config) {
             _logger->error("Failed to load input videos from \"{}\"", inputDir);
             return false;
         }
+    }
+
+    if (YAML::Node actionLastFrame = config["last_frame_of_action"]) {
+        if (!loadActionLengths(actionLastFrame)) {
+            _logger->error("Failed to load last frame of each action from configuration file");
+            return false;
+        }
+    } else {
+        _logger->error("No last frame specified for any actions");
+        return false;
     }
 
     bool madeOutputDir = false;

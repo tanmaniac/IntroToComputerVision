@@ -30,6 +30,9 @@ public:
     // Expects short names, e.g. "PS7A1P1T1"
     cv::VideoCapture openVid(const std::string& name);
 
+    // Expects short names, e.g. "PS7A1P1T1"
+    size_t lastFrameOfAction(const std::string& name);
+
     // Path to which output images will be written
     std::string _outputPathPrefix;
 
@@ -51,8 +54,13 @@ private:
     // files
     bool getVidFilesFromDir(const std::string& dir);
 
+    // Load actions lengths for each sequence into a map
+    bool loadActionLengths(const YAML::Node& actions);
+
     // Map matching file names with absolute file paths
     std::unordered_map<std::string, std::string> _vidMap;
+    // Map matching file names with final frames of each action
+    std::unordered_map<std::string, size_t> _lastFrames;
     // Set as true when configuration is done
     bool _configDone = false;
 };

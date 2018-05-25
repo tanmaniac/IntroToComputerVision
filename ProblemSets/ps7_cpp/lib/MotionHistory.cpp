@@ -94,3 +94,20 @@ void mhi::calcMotionHistory(cv::Mat& history, const cv::Mat& binaryMask, const i
     // Copy back to CPU
     d_history.download(history, stream);
 }
+
+void mhi::energyFromHistory(const cv::Mat& mhi, cv::Mat& mei) {
+    assert(mhi.channels() == 1);
+    mei = mhi.clone();
+
+    // For each pixel in the image, clip all nonzero values to 1
+    mei.forEach<uint8_t>(
+        [](uint8_t& pixel, const int* position) -> void { pixel = (pixel > 0) ? 1 : 0; });
+}
+
+void mhi::energyFromHistory(const std::vector<cv::Mat>& mhis, std::vector<cv::Mat>& meis) {
+    for (const auto& mhi : mhis) {
+        cv::Mat mei;
+        energyFromHistory(mhi, mei);
+        meis.push_back(mei);
+    }
+}

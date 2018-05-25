@@ -17,4 +17,12 @@ void frameDifference(const cv::Mat& f1,
 // Build a motion history image from the current motion history image, tau, and a binary mask
 // representing pixels that have moved in this frame (see frameDifference)
 void calcMotionHistory(cv::Mat& history, const cv::Mat& binaryMask, const int tau);
+
+// Compute motion energy images (MEIs) from a motion history image. This thresholds the MHIs such
+// that any nonzero value is set to 1.
+void energyFromHistory(const cv::Mat& mhi, cv::Mat& mei);
+
+// This is an overloaded namespace function provided for convenience. It differs from the above
+// function only in what arguments it accepts.
+void energyFromHistory(const std::vector<cv::Mat>& mhis, std::vector<cv::Mat>& meis);
 } // namespace mhi
