@@ -1,0 +1,128 @@
+[2018-05-25 20:27:58.087] [file_logger] [info] GPU warmup done
+[2018-05-25 20:27:58.087] [file_logger] [info] Entered directory ../Resources/ProblemSet7
+[2018-05-25 20:27:58.087] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A3P1T1.avi" with key "PS7A3P1T1" to map
+[2018-05-25 20:27:58.087] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A2P1T2.avi" with key "PS7A2P1T2" to map
+[2018-05-25 20:27:58.087] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A3P3T3.avi" with key "PS7A3P3T3" to map
+[2018-05-25 20:27:58.087] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A3P3T2.avi" with key "PS7A3P3T2" to map
+[2018-05-25 20:27:58.087] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A2P2T1.avi" with key "PS7A2P2T1" to map
+[2018-05-25 20:27:58.087] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A3P2T1.avi" with key "PS7A3P2T1" to map
+[2018-05-25 20:27:58.087] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A1P3T2.avi" with key "PS7A1P3T2" to map
+[2018-05-25 20:27:58.087] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A1P3T3.avi" with key "PS7A1P3T3" to map
+[2018-05-25 20:27:58.087] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A3P1T2.avi" with key "PS7A3P1T2" to map
+[2018-05-25 20:27:58.087] [file_logger] [info] Added "../Resources/ProblemSet7/TestLabel1.avi" with key "TestLabel1" to map
+[2018-05-25 20:27:58.087] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A3P1T3.avi" with key "PS7A3P1T3" to map
+[2018-05-25 20:27:58.087] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A3P2T3.avi" with key "PS7A3P2T3" to map
+[2018-05-25 20:27:58.087] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A2P3T2.avi" with key "PS7A2P3T2" to map
+[2018-05-25 20:27:58.087] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A1P1T3.avi" with key "PS7A1P1T3" to map
+[2018-05-25 20:27:58.087] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A2P1T1.avi" with key "PS7A2P1T1" to map
+[2018-05-25 20:27:58.087] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A1P2T2.avi" with key "PS7A1P2T2" to map
+[2018-05-25 20:27:58.087] [file_logger] [info] Added "../Resources/ProblemSet7/TestLabel2.avi" with key "TestLabel2" to map
+[2018-05-25 20:27:58.088] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A1P3T1.avi" with key "PS7A1P3T1" to map
+[2018-05-25 20:27:58.088] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A2P2T3.avi" with key "PS7A2P2T3" to map
+[2018-05-25 20:27:58.088] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A3P2T2.avi" with key "PS7A3P2T2" to map
+[2018-05-25 20:27:58.088] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A2P3T3.avi" with key "PS7A2P3T3" to map
+[2018-05-25 20:27:58.088] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A2P1T3.avi" with key "PS7A2P1T3" to map
+[2018-05-25 20:27:58.088] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A2P3T1.avi" with key "PS7A2P3T1" to map
+[2018-05-25 20:27:58.088] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A1P2T1.avi" with key "PS7A1P2T1" to map
+[2018-05-25 20:27:58.088] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A1P2T3.avi" with key "PS7A1P2T3" to map
+[2018-05-25 20:27:58.088] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A1P1T2.avi" with key "PS7A1P1T2" to map
+[2018-05-25 20:27:58.088] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A3P3T1.avi" with key "PS7A3P3T1" to map
+[2018-05-25 20:27:58.088] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A1P1T1.avi" with key "PS7A1P1T1" to map
+[2018-05-25 20:27:58.088] [file_logger] [info] Added "../Resources/ProblemSet7/PS7A2P2T2.avi" with key "PS7A2P2T2" to map
+[2018-05-25 20:27:58.088] [logger] [info] Found input videos in dir "../Resources/ProblemSet7"
+[2018-05-25 20:27:58.088] [logger] [info] Created output directory at "./ps7_output"
+[2018-05-25 20:27:58.088] [logger] [info] Loaded runtime configuration from "../config/ps7.yaml"
+[2018-05-25 20:27:58.088] [logger] [info] Problem 1 begins
+[2018-05-25 20:28:00.861] [logger] [info] Average MHI update time was 12.1908 ms (82.0292 fps) over 109 frames
+[2018-05-25 20:28:02.642] [logger] [info] Average MHI update time was 9.827 ms (101.76 fps) over 76 frames
+[2018-05-25 20:28:04.522] [logger] [info] Average MHI update time was 9.9004 ms (101.006 fps) over 77 frames
+[2018-05-25 20:28:06.500] [logger] [info] Average MHI update time was 9.83692 ms (101.658 fps) over 85 frames
+[2018-05-25 20:28:06.503] [logger] [info] Problem 1 runtime = 8414.85 ms
+[2018-05-25 20:28:06.503] [logger] [info] Problem 2 begins
+[2018-05-25 20:28:06.503] [logger] [info] Computing MHI for PS7A1P1T1.avi
+[2018-05-25 20:28:07.609] [logger] [info] Average MHI update time was 8.79497 ms (113.701 fps) over 109 frames
+[2018-05-25 20:28:07.610] [logger] [info] Computing MHI for PS7A1P1T2.avi
+[2018-05-25 20:28:08.471] [logger] [info] Average MHI update time was 7.84702 ms (127.437 fps) over 95 frames
+[2018-05-25 20:28:08.472] [logger] [info] Computing MHI for PS7A1P1T3.avi
+[2018-05-25 20:28:09.469] [logger] [info] Average MHI update time was 7.8768 ms (126.955 fps) over 111 frames
+[2018-05-25 20:28:09.470] [logger] [info] Computing MHI for PS7A1P2T1.avi
+[2018-05-25 20:28:10.165] [logger] [info] Average MHI update time was 7.83237 ms (127.675 fps) over 76 frames
+[2018-05-25 20:28:10.166] [logger] [info] Computing MHI for PS7A1P2T2.avi
+[2018-05-25 20:28:10.773] [logger] [info] Average MHI update time was 7.81607 ms (127.942 fps) over 65 frames
+[2018-05-25 20:28:10.773] [logger] [info] Computing MHI for PS7A1P2T3.avi
+[2018-05-25 20:28:11.408] [logger] [info] Average MHI update time was 7.81547 ms (127.951 fps) over 69 frames
+[2018-05-25 20:28:11.409] [logger] [info] Computing MHI for PS7A1P3T1.avi
+[2018-05-25 20:28:12.201] [logger] [info] Average MHI update time was 8.01714 ms (124.733 fps) over 85 frames
+[2018-05-25 20:28:12.202] [logger] [info] Computing MHI for PS7A1P3T2.avi
+[2018-05-25 20:28:12.944] [logger] [info] Average MHI update time was 7.86152 ms (127.202 fps) over 81 frames
+[2018-05-25 20:28:12.945] [logger] [info] Computing MHI for PS7A1P3T3.avi
+[2018-05-25 20:28:13.665] [logger] [info] Average MHI update time was 7.89756 ms (126.621 fps) over 78 frames
+[2018-05-25 20:28:13.665] [logger] [info] Computing MHI for PS7A2P1T1.avi
+[2018-05-25 20:28:14.330] [logger] [info] Average MHI update time was 7.84143 ms (127.528 fps) over 72 frames
+[2018-05-25 20:28:14.331] [logger] [info] Computing MHI for PS7A2P1T2.avi
+[2018-05-25 20:28:15.101] [logger] [info] Average MHI update time was 7.87614 ms (126.966 fps) over 84 frames
+[2018-05-25 20:28:15.102] [logger] [info] Computing MHI for PS7A2P1T3.avi
+[2018-05-25 20:28:15.870] [logger] [info] Average MHI update time was 7.7982 ms (128.235 fps) over 85 frames
+[2018-05-25 20:28:15.871] [logger] [info] Computing MHI for PS7A2P2T1.avi
+[2018-05-25 20:28:16.459] [logger] [info] Average MHI update time was 7.93808 ms (125.975 fps) over 61 frames
+[2018-05-25 20:28:16.460] [logger] [info] Computing MHI for PS7A2P2T2.avi
+[2018-05-25 20:28:17.079] [logger] [info] Average MHI update time was 8.05967 ms (124.074 fps) over 65 frames
+[2018-05-25 20:28:17.080] [logger] [info] Computing MHI for PS7A2P2T3.avi
+[2018-05-25 20:28:17.762] [logger] [info] Average MHI update time was 7.8594 ms (127.236 fps) over 74 frames
+[2018-05-25 20:28:17.763] [logger] [info] Computing MHI for PS7A2P3T1.avi
+[2018-05-25 20:28:18.481] [logger] [info] Average MHI update time was 7.81265 ms (127.998 fps) over 79 frames
+[2018-05-25 20:28:18.482] [logger] [info] Computing MHI for PS7A2P3T2.avi
+[2018-05-25 20:28:19.199] [logger] [info] Average MHI update time was 7.90017 ms (126.579 fps) over 77 frames
+[2018-05-25 20:28:19.199] [logger] [info] Computing MHI for PS7A2P3T3.avi
+[2018-05-25 20:28:19.950] [logger] [info] Average MHI update time was 7.88456 ms (126.83 fps) over 82 frames
+[2018-05-25 20:28:19.950] [logger] [info] Computing MHI for PS7A3P1T1.avi
+[2018-05-25 20:28:20.975] [logger] [info] Average MHI update time was 7.80558 ms (128.113 fps) over 115 frames
+[2018-05-25 20:28:20.976] [logger] [info] Computing MHI for PS7A3P1T2.avi
+[2018-05-25 20:28:21.897] [logger] [info] Average MHI update time was 7.87988 ms (126.906 fps) over 102 frames
+[2018-05-25 20:28:21.898] [logger] [info] Computing MHI for PS7A3P1T3.avi
+[2018-05-25 20:28:22.767] [logger] [info] Average MHI update time was 7.86191 ms (127.196 fps) over 96 frames
+[2018-05-25 20:28:22.768] [logger] [info] Computing MHI for PS7A3P2T1.avi
+[2018-05-25 20:28:23.478] [logger] [info] Average MHI update time was 7.98056 ms (125.304 fps) over 76 frames
+[2018-05-25 20:28:23.478] [logger] [info] Computing MHI for PS7A3P2T2.avi
+[2018-05-25 20:28:24.254] [logger] [info] Average MHI update time was 7.86216 ms (127.192 fps) over 85 frames
+[2018-05-25 20:28:24.255] [logger] [info] Computing MHI for PS7A3P2T3.avi
+[2018-05-25 20:28:24.983] [logger] [info] Average MHI update time was 7.83229 ms (127.677 fps) over 80 frames
+[2018-05-25 20:28:24.984] [logger] [info] Computing MHI for PS7A3P3T1.avi
+[2018-05-25 20:28:25.702] [logger] [info] Average MHI update time was 7.82987 ms (127.716 fps) over 78 frames
+[2018-05-25 20:28:25.703] [logger] [info] Computing MHI for PS7A3P3T2.avi
+[2018-05-25 20:28:26.559] [logger] [info] Average MHI update time was 7.91665 ms (126.316 fps) over 94 frames
+[2018-05-25 20:28:26.560] [logger] [info] Computing MHI for PS7A3P3T3.avi
+[2018-05-25 20:28:27.396] [logger] [info] Average MHI update time was 7.86004 ms (127.226 fps) over 91 frames
+[2018-05-25 20:28:27.397] [logger] [info] Computed 27 MHIs
+[2018-05-25 20:28:27.780] [logger] [info] Converted 27 MHIs to MEIs
+[2018-05-25 20:28:29.241] [logger] [info] 
+Confusion matrix with central moments=
+[1, 0, 0;
+ 0, 1, 0;
+ 0, 0.11111111, 0.8888889]
+[2018-05-25 20:28:29.570] [logger] [info] 
+Confusion matrix with scale-invariant moments=
+[0.77777779, 0, 0.22222222;
+ 0, 1, 0;
+ 0.44444445, 0, 0.55555558]
+[2018-05-25 20:28:29.906] [logger] [info] 
+Confusion matrix for person 1=
+[1, 0, 0;
+ 0, 1, 0;
+ 0, 0.33333334, 0.66666669]
+[2018-05-25 20:28:30.236] [logger] [info] 
+Confusion matrix for person 2=
+[1, 0, 0;
+ 0, 1, 0;
+ 0, 0, 1]
+[2018-05-25 20:28:30.585] [logger] [info] 
+Confusion matrix for person 3=
+[1, 0, 0;
+ 0, 1, 0;
+ 0, 0, 1]
+[2018-05-25 20:28:30.873] [logger] [info] 
+Confusion matrix for average of all=
+[1, 0, 0;
+ 0, 1, 0;
+ 0, 0.11111112, 0.88888896]
+[2018-05-25 20:28:31.215] [logger] [info] Problem 2 runtime = 24711.9 ms

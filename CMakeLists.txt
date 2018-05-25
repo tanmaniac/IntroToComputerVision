@@ -23,6 +23,7 @@ add_subdirectory(external)
 
 include_directories(external/yaml-cpp/include)
 include_directories(external/spdlog/include)
+include_directories(external/gnuplot-iostream)
 
 #######################################
 # Look for CUDA

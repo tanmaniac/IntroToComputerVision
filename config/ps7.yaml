@@ -1,0 +1,68 @@
+---
+# Directory of input videos
+input_dir: ../Resources/ProblemSet7
+
+output_dir: ./ps7_output
+
+last_frame_of_action:
+  action1:
+    person1:
+      - 50  # Trial 1
+      - 39  # Trial 2
+      - 41  # Trial 3
+    person2:
+      - 30
+      - 30
+      - 32
+    person3:
+      - 36
+      - 31
+      - 32
+  action2:
+    person1:
+      - 30
+      - 30
+      - 30
+    person2:
+      - 23
+      - 23
+      - 23
+    person3:
+      - 30
+      - 30
+      - 30
+  action3:
+    person1:
+      - 42
+      - 38
+      - 38
+    person2:
+      - 38
+      - 36
+      - 38
+    person3:
+      - 38
+      - 38
+      - 19
+
+mhi_action1:
+  diff_threshold: 1.7
+  pre_blur_size: 31
+  pre_blur_sigma: 10
+  tau: 25
+  last_frame: 30
+
+mhi_action2:
+  diff_threshold: 1.7
+  pre_blur_size: 31
+  pre_blur_sigma: 10
+  tau: 25
+  last_frame: 30
+
+mhi_action3:
+  diff_threshold: 1.7
+  pre_blur_size: 31
+  pre_blur_sigma: 10
+  tau: 34
+  last_frame: 38
+...

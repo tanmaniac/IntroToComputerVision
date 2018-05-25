@@ -11,14 +11,14 @@ Lecture slides, problem sets, and C++ solutions to UD810.
 I try to accelerate all of the assignments with CUDA, so you will need an Nvidia GPU along with CUDA toolkit installed. This repository is developed on:
 - Ubuntu 17.10 + CUDA 9.1; Intel Core i7 6800k + GeForce GTX 1080
 
-Follow [Nvidia's CUDA installation instructions](http://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html) to install CUDA. 
-
-[Git LFS](https://git-lfs.github.com/) is also required to clone the images and lecture slides.
+#### You will need:
+- CUDA: Follow [Nvidia's CUDA installation instructions](http://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html) to install. 
+- [Git LFS](https://git-lfs.github.com/) is required to clone the images and lecture slides.
 
 From here, there are two options: building in **Docker** or just building locally on a host machine.
 
-### Containerized Build in Docker
-This is the recommended approach to building this project since all of the dependencies are included in the Docker image.
+### Containerized Build in Docker *(Recommended!)*
+This is the suggested approach to building this project since all of the dependencies are included in the Docker image.
 
 - Install Docker-CE as described for your distribution on the [Docker docs](https://docs.docker.com/install/).
     - Follow the [Optional Linux post-installation](https://docs.docker.com/install/linux/linux-postinstall/) steps to run Docker without `sudo`.
@@ -40,6 +40,10 @@ This will drop you into a shell where you can follow the build steps below. The 
 
 - Build OpenCV 3.4.1 as directed in the OpenCV documentation. Make sure to add the `-DWITH_CUDA=ON` CMake flag to compile CUDA features.
 - Install [Eigen](http://eigen.tuxfamily.org/) as described in its documentation.
+- `gnuplot`, which you can install from your distro repository. On Ubuntu: 
+```bash
+sudo apt install gnuplot
+```
 
 ## Building
 

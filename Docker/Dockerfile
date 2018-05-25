@@ -3,7 +3,7 @@
 FROM tanmaniac/opencv3-cudagl:latest
 LABEL maintainers="Tanmay Bangalore <tanmaybangalore@gmail.com>"
 
-RUN apt-get update && apt-get install -y tmux libboost-all-dev &&\
+RUN apt-get update && apt-get install -y tmux libboost-all-dev gnuplot &&\
     rm -rf /var/lib/apt/lists/*
 
 # Install Eigen for linear algebra
