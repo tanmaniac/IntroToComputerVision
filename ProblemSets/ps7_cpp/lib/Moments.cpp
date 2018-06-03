@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <numeric>
 
 std::vector<std::pair<float, float>>
     moments::centralMoment(const cv::Mat& img,
